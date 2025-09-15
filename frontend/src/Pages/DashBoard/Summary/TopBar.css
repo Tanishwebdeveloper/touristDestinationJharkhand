@@ -1,0 +1,20 @@
+.TopBar {
+    border: 1px solid black;
+    border-radius: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: calc(100vw - 40px);
+    height: 120px;
+    margin: 10px 20px;
+    box-sizing: border-box;
+    padding: 20px;
+    background: linear-gradient(90deg, #A259FF 0%, #3F51FA 100%);
+    color: #fff;
+}
+
+.CustomButton{
+    display: flex;
+    width: 20rem;
+    justify-content: space-between;
+}

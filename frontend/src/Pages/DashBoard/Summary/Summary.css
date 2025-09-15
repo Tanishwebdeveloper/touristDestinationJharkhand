@@ -1,0 +1,16 @@
+.Summary{
+    display: flex;
+    flex-direction: column;
+}
+
+.SummaryIcon{
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    align-content: center;
+    align-self: auto;
+    width: calc(100vw - 40px);
+    margin: 2rem 1rem;
+    justify-content: space-evenly;
+    gap: 20px 30px;
+}
