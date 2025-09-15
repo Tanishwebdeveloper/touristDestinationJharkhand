@@ -2,13 +2,21 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import { configDotenv } from "dotenv";
 import connectDb from './config/dbconnect.js'
-const app=express();
-app.use(cookieParser());
+
 configDotenv();
-const PORT=process.env.PORT||5000;
+
+const app = express();
+const port = process.env.port||5000;
+
+app.use(cookieParser());
+app.use(express.json()); //For local database
 
 connectDb();
-app.listen(PORT,()=>{
-   console.log(`Server is running on the port ${PORT} `);
-});
 
+import resortRoutes from "./routes/resort.js";
+
+app.use("/api/resorts", resortRoutes);
+
+app.listen(port, ()=>{
+   console.log(`Server is running on the port ${port} `);
+});
