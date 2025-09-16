@@ -10,6 +10,7 @@ export default function Navbar() {
     { name: "Home", path: "/" },
     { name: "Resorts", path: "/resortpage" },
     { name: "Guides", path: "/guidepage" },
+    { name: "Drivers", path: "/driverpage" },
     { name: "Orders", path: "/orderpage" },
     { name: "Cart", path: "/ecommercecartpage" },
     { name: "Login", path: "/loginpage" },

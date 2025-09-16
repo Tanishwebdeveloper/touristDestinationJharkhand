@@ -214,6 +214,126 @@ export default function AdminDashBoard() {
       alert("Failed to create guide");
     }
   };
+
+  // State hooks for Drivers section
+  const [drivers, setDrivers] = useState([]);
+  const [loadingDrivers, setLoadingDrivers] = useState(false);
+  const [editingDriver, setEditingDriver] = useState(null);
+  const [driverFormData, setDriverFormData] = useState({
+    driver_id: "",
+    name: "",
+    language: "",
+    days: "",
+    cost: "",
+    guide_description: "",
+    worked_with_clients: "",
+    reviews: "",
+  });
+
+  // Fetch drivers when activeSection is "drivers"
+  useEffect(() => {
+    if (activeSection === "drivers") {
+      fetchDrivers();
+    }
+  }, [activeSection]);
+
+  const fetchDrivers = async () => {
+    setLoadingDrivers(true);
+    try {
+      const { data } = await axios.get("/api/drivers");
+      setDrivers(data);
+    } catch (error) {
+      console.error("Error fetching drivers", error);
+    }
+    setLoadingDrivers(false);
+  };
+
+  const handleDriverEditClick = (driver) => {
+    setEditingDriver(driver);
+    setDriverFormData({
+      driver_id: driver.driver_id,
+      name: driver.name,
+      language: driver.language,
+      days: driver.days,
+      cost: driver.cost,
+      guide_description: driver.guide_description,
+      worked_with_clients: driver.worked_with_clients?.join(", "),
+      reviews: driver.reviews?.join(", "),
+    });
+  };
+
+  const handleDriverDeleteClick = async (driverId) => {
+    if (window.confirm("Are you sure to delete this driver?")) {
+      try {
+        await axios.delete(`/api/drivers/${driverId}`);
+        setDrivers(drivers.filter(d => d._id !== driverId));
+      } catch (error) {
+        alert("Failed to delete driver");
+      }
+    }
+  };
+
+  const handleDriverFormChange = (e) => {
+    setDriverFormData({ ...driverFormData, [e.target.name]: e.target.value });
+  };
+
+  const handleDriverUpdateSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const updatedData = {
+        ...driverFormData,
+        worked_with_clients: driverFormData.worked_with_clients.split(",").map(s => s.trim()),
+        reviews: driverFormData.reviews.split(",").map(s => s.trim()),
+      };
+      const { data } = await axios.put(`/api/drivers/${editingDriver._id}`, updatedData);
+      setDrivers(drivers.map(d => (d._id === data._id ? data : d)));
+      setEditingDriver(null);
+      alert("Driver updated successfully");
+    } catch (error) {
+      alert("Failed to update driver");
+    }
+  };
+
+  const [newDriverData, setNewDriverData] = useState({
+    driver_id: "",
+    name: "",
+    language: "",
+    days: "",
+    cost: "",
+    guide_description: "",
+    worked_with_clients: "",
+    reviews: "",
+  });
+
+  const handleNewDriverInputChange = (e) => {
+    setNewDriverData({ ...newDriverData, [e.target.name]: e.target.value });
+  };
+
+  const handleCreateDriver = async (e) => {
+    e.preventDefault();
+    try {
+      const toSend = {
+        ...newDriverData,
+        worked_with_clients: newDriverData.worked_with_clients.split(",").map(s => s.trim()),
+        reviews: newDriverData.reviews.split(",").map(s => s.trim()),
+      };
+      const { data } = await axios.post("/api/drivers", toSend);
+      setDrivers([...drivers, data]);
+      setNewDriverData({
+        driver_id: "",
+        name: "",
+        language: "",
+        days: "",
+        cost: "",
+        guide_description: "",
+        worked_with_clients: "",
+        reviews: "",
+      });
+      alert("Driver created successfully");
+    } catch (error) {
+      alert("Failed to create driver");
+    }
+  };
   
   return (
     <div className="font-roboto bg-orange-50 text-gray-800 min-h-screen">
@@ -255,7 +375,7 @@ export default function AdminDashBoard() {
 
       {/* Navigation */}
       <div className="bg-gray-100 rounded-3xl flex justify-center gap-4 py-3 px-5 mt-6 mx-6">
-        {["user-management", "approvals", "destinations", "guides", "reports"].map(
+        {["user-management", "approvals", "destinations", "guides", "drivers", "reports"].map(
           (item) => (
             <button
               key={item}
@@ -709,7 +829,221 @@ export default function AdminDashBoard() {
               </table>
             )}
           </div>
-        )}        
+        )}      
+
+        {activeSection === "drivers" && (
+          <div>
+            <h2 className="text-lg font-bold mb-4">Driver Management</h2>
+        
+            {/* Create new Driver form */}
+            <div className="mb-6 p-4 border rounded-lg bg-gray-50 max-w-3xl">
+              <h3 className="font-bold mb-2 text-lg">Add New Driver</h3>
+              <form onSubmit={handleCreateDriver} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input
+                  name="driver_id"
+                  placeholder="Driver ID"
+                  value={newDriverData.driver_id}
+                  onChange={handleNewDriverInputChange}
+                  required
+                  className="border rounded px-3 py-2"
+                />
+                <input
+                  name="name"
+                  placeholder="Name"
+                  value={newDriverData.name}
+                  onChange={handleNewDriverInputChange}
+                  required
+                  className="border rounded px-3 py-2"
+                />
+                <input
+                  name="language"
+                  placeholder="Language"
+                  value={newDriverData.language}
+                  onChange={handleNewDriverInputChange}
+                  className="border rounded px-3 py-2"
+                />
+                <input
+                  name="days"
+                  type="number"
+                  placeholder="Days"
+                  value={newDriverData.days}
+                  onChange={handleNewDriverInputChange}
+                  required
+                  className="border rounded px-3 py-2"
+                />
+                <input
+                  name="cost"
+                  type="number"
+                  placeholder="Cost"
+                  value={newDriverData.cost}
+                  onChange={handleNewDriverInputChange}
+                  required
+                  className="border rounded px-3 py-2"
+                />
+                <textarea
+                  name="guide_description"
+                  placeholder="Description"
+                  value={newDriverData.guide_description}
+                  onChange={handleNewDriverInputChange}
+                  rows="3"
+                  className="border rounded px-3 py-2 md:col-span-2"
+                />
+                <input
+                  name="worked_with_clients"
+                  placeholder="Worked With Clients (comma separated)"
+                  value={newDriverData.worked_with_clients}
+                  onChange={handleNewDriverInputChange}
+                  className="border rounded px-3 py-2 md:col-span-2"
+                />
+                <input
+                  name="reviews"
+                  placeholder="Reviews (comma separated)"
+                  value={newDriverData.reviews}
+                  onChange={handleNewDriverInputChange}
+                  className="border rounded px-3 py-2 md:col-span-2"
+                />
+                <button
+                  type="submit"
+                  className="md:col-span-2 bg-green-600 text-white rounded px-4 py-2 hover:bg-green-700"
+                >
+                  Create Driver
+                </button>
+              </form>
+            </div>
+        
+            {/* Editing Driver */}
+            {editingDriver && (
+              <div className="mt-6 bg-gray-100 p-4 rounded-lg max-w-3xl">
+                <h3 className="font-bold mb-2">Edit Driver: {editingDriver.name}</h3>
+                <form onSubmit={handleDriverUpdateSubmit} className="space-y-4">
+                  <input
+                    name="driver_id"
+                    placeholder="Driver ID"
+                    value={driverFormData.driver_id}
+                    onChange={handleDriverFormChange}
+                    required
+                    className="border rounded px-3 py-2"
+                  />
+                  <input
+                    name="name"
+                    placeholder="Name"
+                    value={driverFormData.name}
+                    onChange={handleDriverFormChange}
+                    required
+                    className="border rounded px-3 py-2"
+                  />
+                  <input
+                    name="language"
+                    placeholder="Language"
+                    value={driverFormData.language}
+                    onChange={handleDriverFormChange}
+                    className="border rounded px-3 py-2"
+                  />
+                  <input
+                    name="days"
+                    type="number"
+                    placeholder="Days"
+                    value={driverFormData.days}
+                    onChange={handleDriverFormChange}
+                    required
+                    className="border rounded px-3 py-2"
+                  />
+                  <input
+                    name="cost"
+                    type="number"
+                    placeholder="Cost"
+                    value={driverFormData.cost}
+                    onChange={handleDriverFormChange}
+                    required
+                    className="border rounded px-3 py-2"
+                  />
+                  <textarea
+                    name="guide_description"
+                    placeholder="Description"
+                    value={driverFormData.guide_description}
+                    onChange={handleDriverFormChange}
+                    rows="3"
+                    className="border rounded px-3 py-2"
+                  />
+                  <input
+                    name="worked_with_clients"
+                    placeholder="Worked With Clients (comma separated)"
+                    value={driverFormData.worked_with_clients}
+                    onChange={handleDriverFormChange}
+                    className="border rounded px-3 py-2"
+                  />
+                  <input
+                    name="reviews"
+                    placeholder="Reviews (comma separated)"
+                    value={driverFormData.reviews}
+                    onChange={handleDriverFormChange}
+                    className="border rounded px-3 py-2"
+                  />
+                  <div className="flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setEditingDriver(null)}
+                      className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                    >
+                      Update
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* Display Drivers in table */}
+            {loadingDrivers ? (
+              <p>Loading drivers...</p>
+            ) : (
+              <table className="min-w-full bg-white border max-w-4xl">
+                <thead>
+                  <tr>
+                    <th className="border px-4 py-2">Driver ID</th>
+                    <th className="border px-4 py-2">Name</th>
+                    <th className="border px-4 py-2">Language</th>
+                    <th className="border px-4 py-2">Days</th>
+                    <th className="border px-4 py-2">Cost</th>
+                    <th className="border px-4 py-2">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {drivers.map((d) => (
+                    <tr key={d._id} className="hover:bg-gray-100">
+                      <td className="border px-4 py-2">{d.driver_id}</td>
+                      <td className="border px-4 py-2">{d.name}</td>
+                      <td className="border px-4 py-2">{d.language}</td>
+                      <td className="border px-4 py-2">{d.days}</td>
+                      <td className="border px-4 py-2">₹{d.cost}</td>
+                      <td className="border px-4 py-2 flex gap-2">
+                        <button
+                          onClick={() => handleDriverEditClick(d)}
+                          className="text-blue-600 hover:text-blue-800"
+                          title="Edit"
+                        >
+                          <FaPenToSquare />
+                        </button>
+                        <button
+                          onClick={() => handleDriverDeleteClick(d._id)}
+                          className="text-red-600 hover:text-red-800"
+                          title="Delete"
+                        >
+                          <FaCircleXmark />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+)}
 
         {activeSection === "reports" && (
           <div>

@@ -21,7 +21,11 @@ const images = [
 const items1 = [1, 1, 1, 1, 1];
 const items2 = [1, 1, 1];
 
-import { useState } from "react";
+//Newly added
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+
+// import { useState } from "react";
 import {
   Dialog,
   DialogBackdrop,
@@ -72,6 +76,23 @@ function classNames(...classes) {
 
 export default function OrderFilter() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+
+  const [orders, setOrders] = useState([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
+
+  useEffect(() => {
+    async function fetchOrders() {
+      setLoadingOrders(true);
+      try {
+        const { data } = await axios.get("/api/orders");
+        setOrders(data);
+      } catch (err) {
+        console.error("Failed to fetch orders:", err);
+      }
+      setLoadingOrders(false);
+    }
+    fetchOrders();
+  }, []);
 
   return (
     <div className="bg-gradient-to-b from-gray-50 to-white min-h-screen">
@@ -190,6 +211,41 @@ export default function OrderFilter() {
               </button>
             </div>
           </div>
+
+          {/* New dynamically fetched orders rendered here */}
+          <section className="pt-8 pb-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-2xl font-semibold mb-6">Recent Orders</h2>
+            {loadingOrders ? (
+              <p>Loading orders...</p>
+            ) : orders.length === 0 ? (
+              <p>No orders available.</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {orders.map((order, index) => (
+                  <div key={order._id} className="bg-white rounded-2xl shadow p-4">
+                    <img
+                      src={images[index % images.length]}
+                      alt="Order"
+                      className="h-40 w-full object-cover rounded-lg mb-4"
+                    />
+                    <h3 className="text-lg font-bold">{order.location}</h3>
+                    <p className="text-gray-600 mb-2">{order.description || "-"}</p>
+                    <p className="text-sm text-gray-500">
+                      User: {order.user?.fullname || "Unknown"}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      Guide: {order.guide?.name || "Not assigned"}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      Resort: {order.resort?.name || "Not assigned"}
+                    </p>
+                    <p className="text-sm text-gray-500">Order ID: {order.order_id}</p>
+                    {/* You can add buttons for edit/delete here later */}
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
 
           {/* Content Section */}
           <section className="pt-8 pb-24">

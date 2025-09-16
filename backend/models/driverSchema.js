@@ -6,7 +6,7 @@ const driverSchema = new mongoose.Schema({
   language: { type: String },
   days: { type: Number, required: true },
   cost: { type: Number, required: true },
-  guide_description: { type: String },
+  driver_description: { type: String },
   worked_with_clients: [{ type: String }],
   reviews: [{ type: String }],
 });

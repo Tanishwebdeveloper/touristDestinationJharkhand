@@ -15,9 +15,13 @@ connectDb();
 
 import resortRoutes from "./routes/resort.js";
 import guideRoutes from "./routes/guide.js";
+import orderRoutes from "./routes/order.js";
+import driverRoutes from "./routes/driver.js";
 
 app.use("/api/resorts", resortRoutes);
 app.use("/api/guides", guideRoutes);
+app.use("/api/orders", orderRoutes);
+app.use("/api/drivers", driverRoutes);
 
 app.listen(port, ()=>{
    console.log(`Server is running on the port ${port} `);

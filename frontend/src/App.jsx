@@ -7,6 +7,7 @@ import SignupPage from "./Pages/SignupPage.jsx";
 import OrderPage from "./Pages/OrderPage.jsx";
 import ResortPage from "./Pages/ResortPage.jsx";
 import GuidePage from "./Pages/GuidePage.jsx";
+import DriverPage from "./Pages/DriverPage.jsx";
 import Navbar from "./Components/Navbar.jsx";
 import FooterHome from "./Components/HomePageComponent/FooterHome.jsx";
 import EcommerceCartPage from "./Pages/EcommrceCartPage.jsx";
@@ -30,6 +31,7 @@ const App = () => {
           <Route element={<OrderPage />} path="orderpage"></Route>
           <Route element={<ResortPage />} path="resortpage"></Route>
           <Route element={<GuidePage />} path="guidepage"></Route>
+          <Route element={<DriverPage/>} path="driverpage"></Route>
           <Route
             element={<EcommerceCartPage />}
             path="ecommercecartpage"
