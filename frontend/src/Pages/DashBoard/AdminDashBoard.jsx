@@ -104,6 +104,117 @@ export default function AdminDashBoard() {
     }
   };
 
+  //Guide Section
+  const [guides, setGuides] = useState([]);
+  const [loadingGuides, setLoadingGuides] = useState(false);
+  const [editingGuide, setEditingGuide] = useState(null);
+  const [guideFormData, setGuideFormData] = useState({});
+
+  useEffect(() => {
+    if (activeSection === "guides") {
+      fetchGuides();
+    }
+  }, [activeSection]);
+
+  const fetchGuides = async () => {
+    setLoadingGuides(true);
+    try {
+      const { data } = await axios.get("/api/guides");
+      setGuides(data);
+    } catch (error) {
+      console.error("Error fetching guides", error);
+    }
+    setLoadingGuides(false);
+  };
+
+  const handleGuideEditClick = (guide) => {
+    setEditingGuide(guide);
+    setGuideFormData({
+      guide_id: guide.guide_id,
+      name: guide.name,
+      language: guide.language,
+      days: guide.days,
+      cost: guide.cost,
+      guide_description: guide.guide_description,
+      worked_with_clients: guide.worked_with_clients?.join(", "),
+      reviews: guide.reviews?.join(", "),
+    });
+  };
+
+  const handleGuideDeleteClick = async (guideId) => {
+    if (window.confirm("Are you sure to delete this guide?")) {
+      try {
+        await axios.delete(`/api/guides/${guideId}`);
+        setGuides(guides.filter(g => g._id !== guideId));
+      } catch (error) {
+        alert("Failed to delete guide");
+      }
+    }
+  };
+
+  const handleGuideFormChange = (e) => {
+    setGuideFormData({ ...guideFormData, [e.target.name]: e.target.value });
+  };
+
+  const handleGuideUpdateSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const updatedData = {
+        ...guideFormData, 
+        worked_with_clients: guideFormData.worked_with_clients.split(",").map(s => s.trim()),
+        reviews: guideFormData.reviews.split(",").map(s => s.trim()),
+      };
+      const { data } = await axios.put(`/api/guides/${editingGuide._id}`, updatedData);
+      setGuides(guides.map(g => (g._id === data._id ? data : g)));
+      setEditingGuide(null);
+      alert("Guide updated successfully");
+    } catch (error) {
+      alert("Failed to update guide");
+    }
+  };
+
+  // Create new guide
+  const [newGuideData, setNewGuideData] = useState({
+    guide_id: "",
+    name: "",
+    language: "",
+    days: "",
+    cost: "",
+    guide_description: "",
+    worked_with_clients: "",
+    reviews: "",
+  });
+
+  const handleNewGuideInputChange = (e) => {
+    setNewGuideData({ ...newGuideData, [e.target.name]: e.target.value });
+  };
+
+  const handleCreateGuide = async (e) => {
+    e.preventDefault();
+    try {
+      const toSend = {
+        ...newGuideData,
+        worked_with_clients: newGuideData.worked_with_clients.split(",").map(s => s.trim()),
+        reviews: newGuideData.reviews.split(",").map(s => s.trim()),
+      };
+      const { data } = await axios.post("/api/guides", toSend);
+      setGuides([...guides, data]);
+      setNewGuideData({
+        guide_id: "",
+        name: "",
+        language: "",
+        days: "",
+        cost: "",
+        guide_description: "",
+        worked_with_clients: "",
+        reviews: "",
+      });
+      alert("Guide created successfully");
+    } catch (error) {
+      alert("Failed to create guide");
+    }
+  };
+  
   return (
     <div className="font-roboto bg-orange-50 text-gray-800 min-h-screen">
      
@@ -144,7 +255,7 @@ export default function AdminDashBoard() {
 
       {/* Navigation */}
       <div className="bg-gray-100 rounded-3xl flex justify-center gap-4 py-3 px-5 mt-6 mx-6">
-        {["user-management", "approvals", "destinations", "reports"].map(
+        {["user-management", "approvals", "destinations", "guides", "reports"].map(
           (item) => (
             <button
               key={item}
@@ -385,6 +496,220 @@ export default function AdminDashBoard() {
             )}
           </div>
         )}
+
+        {activeSection === "guides" && (
+          <div>
+            <h2 className="text-lg font-bold mb-4">Guide Management</h2>
+        
+            {/* Create new Guide form */}
+            <div className="mb-6 p-4 border rounded-lg bg-gray-50 max-w-3xl">
+              <h3 className="font-bold mb-2 text-lg">Add New Guide</h3>
+              <form onSubmit={handleCreateGuide} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input
+                  name="guide_id"
+                  placeholder="Guide ID"
+                  value={newGuideData.guide_id}
+                  onChange={handleNewGuideInputChange}
+                  required
+                  className="border rounded px-3 py-2"
+                />
+                <input
+                  name="name"
+                  placeholder="Name"
+                  value={newGuideData.name}
+                  onChange={handleNewGuideInputChange}
+                  required
+                  className="border rounded px-3 py-2"
+                />
+                <input
+                  name="language"
+                  placeholder="Language"
+                  value={newGuideData.language}
+                  onChange={handleNewGuideInputChange}
+                  className="border rounded px-3 py-2"
+                />
+                <input
+                  name="days"
+                  type="number"
+                  placeholder="Days"
+                  value={newGuideData.days}
+                  onChange={handleNewGuideInputChange}
+                  required
+                  className="border rounded px-3 py-2"
+                />
+                <input
+                  name="cost"
+                  type="number"
+                  placeholder="Cost"
+                  value={newGuideData.cost}
+                  onChange={handleNewGuideInputChange}
+                  required
+                  className="border rounded px-3 py-2"
+                />
+                <textarea
+                  name="guide_description"
+                  placeholder="Description"
+                  value={newGuideData.guide_description}
+                  onChange={handleNewGuideInputChange}
+                  rows="3"
+                  className="border rounded px-3 py-2 md:col-span-2"
+                />
+                <input
+                  name="worked_with_clients"
+                  placeholder="Worked With Clients (comma separated)"
+                  value={newGuideData.worked_with_clients}
+                  onChange={handleNewGuideInputChange}
+                  className="border rounded px-3 py-2 md:col-span-2"
+                />
+                <input
+                  name="reviews"
+                  placeholder="Reviews (comma separated)"
+                  value={newGuideData.reviews}
+                  onChange={handleNewGuideInputChange}
+                  className="border rounded px-3 py-2 md:col-span-2"
+                />
+                <button
+                  type="submit"
+                  className="md:col-span-2 bg-green-600 text-white rounded px-4 py-2 hover:bg-green-700"
+                >
+                  Create Guide
+                </button>
+              </form>
+            </div>
+        
+            {/* Editing Guide */}
+            {editingGuide && (
+              <div className="mt-6 bg-gray-100 p-4 rounded-lg max-w-3xl">
+                <h3 className="font-bold mb-2">Edit Guide: {editingGuide.name}</h3>
+                <form onSubmit={handleGuideUpdateSubmit} className="space-y-4">
+                  <input
+                    name="guide_id"
+                    placeholder="Guide ID"
+                    value={guideFormData.guide_id}
+                    onChange={handleGuideFormChange}
+                    required
+                    className="border rounded px-3 py-2"
+                  />
+                  <input
+                    name="name"
+                    placeholder="Name"
+                    value={guideFormData.name}
+                    onChange={handleGuideFormChange}
+                    required
+                    className="border rounded px-3 py-2"
+                  />
+                  <input
+                    name="language"
+                    placeholder="Language"
+                    value={guideFormData.language}
+                    onChange={handleGuideFormChange}
+                    className="border rounded px-3 py-2"
+                  />
+                  <input
+                    name="days"
+                    type="number"
+                    placeholder="Days"
+                    value={guideFormData.days}
+                    onChange={handleGuideFormChange}
+                    required
+                    className="border rounded px-3 py-2"
+                  />
+                  <input
+                    name="cost"
+                    type="number"
+                    placeholder="Cost"
+                    value={guideFormData.cost}
+                    onChange={handleGuideFormChange}
+                    required
+                    className="border rounded px-3 py-2"
+                  />
+                  <textarea
+                    name="guide_description"
+                    placeholder="Description"
+                    value={guideFormData.guide_description}
+                    onChange={handleGuideFormChange}
+                    rows="3"
+                    className="border rounded px-3 py-2"
+                  />
+                  <input
+                    name="worked_with_clients"
+                    placeholder="Worked With Clients (comma separated)"
+                    value={guideFormData.worked_with_clients}
+                    onChange={handleGuideFormChange}
+                    className="border rounded px-3 py-2"
+                  />
+                  <input
+                    name="reviews"
+                    placeholder="Reviews (comma separated)"
+                    value={guideFormData.reviews}
+                    onChange={handleGuideFormChange}
+                    className="border rounded px-3 py-2"
+                  />
+                  <div className="flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setEditingGuide(null)}
+                      className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                    >
+                      Update
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* Display Guides in table */}
+            {loadingGuides ? (
+              <p>Loading guides...</p>
+            ) : (
+              <table className="min-w-full bg-white border max-w-4xl">
+                <thead>
+                  <tr>
+                    <th className="border px-4 py-2">Guide ID</th>
+                    <th className="border px-4 py-2">Name</th>
+                    <th className="border px-4 py-2">Language</th>
+                    <th className="border px-4 py-2">Days</th>
+                    <th className="border px-4 py-2">Cost</th>
+                    <th className="border px-4 py-2">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {guides.map(g => (
+                    <tr key={g._id} className="hover:bg-gray-100">
+                      <td className="border px-4 py-2">{g.guide_id}</td>
+                      <td className="border px-4 py-2">{g.name}</td>
+                      <td className="border px-4 py-2">{g.language}</td>
+                      <td className="border px-4 py-2">{g.days}</td>
+                      <td className="border px-4 py-2">₹{g.cost}</td>
+                      <td className="border px-4 py-2 flex gap-2">
+                        <button
+                          onClick={() => handleGuideEditClick(g)}
+                          className="text-blue-600 hover:text-blue-800"
+                          title="Edit"
+                        >
+                          <FaPenToSquare />
+                        </button>
+                        <button
+                          onClick={() => handleGuideDeleteClick(g._id)}
+                          className="text-red-600 hover:text-red-800"
+                          title="Delete"
+                        >
+                          <FaCircleXmark />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}        
 
         {activeSection === "reports" && (
           <div>

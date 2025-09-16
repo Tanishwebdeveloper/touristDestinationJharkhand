@@ -1,5 +1,10 @@
 import express from "express";
-import { getAllResorts, updateResort, deleteResort, createResort } from "../controllers/resort.js";
+import { 
+    getAllResorts, 
+    updateResort, 
+    deleteResort,
+     createResort 
+    } from "../controllers/resort.js";
 
 const router = express.Router();
 

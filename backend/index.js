@@ -14,8 +14,10 @@ app.use(express.json()); //For local database
 connectDb();
 
 import resortRoutes from "./routes/resort.js";
+import guideRoutes from "./routes/guide.js";
 
 app.use("/api/resorts", resortRoutes);
+app.use("/api/guides", guideRoutes);
 
 app.listen(port, ()=>{
    console.log(`Server is running on the port ${port} `);
