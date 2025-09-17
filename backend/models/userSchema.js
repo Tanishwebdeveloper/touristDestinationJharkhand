@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+
 const Userschema = new mongoose.Schema({
   FirstName: {
     type: String,
@@ -18,6 +19,7 @@ const Userschema = new mongoose.Schema({
   },
   role: {
     type: String,
+    enum: ["Tourist", "admin", "service", "analytic"],
     default: "Tourist",
   },
   Cart: {

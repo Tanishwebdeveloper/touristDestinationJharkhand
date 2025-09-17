@@ -15,41 +15,9 @@ import ProtectedRoutes from "./Pages/DashBoard/ProtectedRoutes.jsx";
 import AdminDashBoard from "./Pages/DashBoard/AdminDashBoard.jsx";
 import TouristDashboard from "./Pages/DashBoard/TouristDashboard.jsx";
 import AnalyticsDashBoard from "./Pages/DashBoard/AnalyticsDashBoard.jsx";
+import ServicePartnerDashboard from "./Pages/DashBoard/ServicePartnerDashBoard.jsx";
 import PaymentPage from "./Pages/PaymentPage.jsx";
 import "./App.css";
-
-// const App = () => {
-//   return (
-//     <div className="AppMaindiv bg-gradient-to-br from-white via-amber-50 to-yellow-100 min-h-screen">
-//       <BrowserRouter>
-//         <header>
-//           <Navbar />
-//         </header>
-//         <Routes>
-//           <Route element={<Home />} path="/"></Route>
-//           <Route element={<LoginPage />} path="loginpage"></Route>
-//           <Route element={<SignupPage />} path="signuppage"></Route>
-//           <Route element={<OrderPage />} path="orderpage"></Route>
-//           <Route element={<ResortPage />} path="resortpage"></Route>
-//           <Route element={<GuidePage />} path="guidepage"></Route>
-//           <Route element={<DriverPage/>} path="driverpage"></Route>
-//           <Route
-//             element={<EcommerceCartPage />}
-//             path="ecommercecartpage"
-//           ></Route>
-//           <Route element={<DashBoard />} path="dashboard"></Route>
-//           <Route path="dashboard/:role"></Route>
-//           <Route element={<AnalyticsDashBoard />} path="analyticsdashboard"></Route>
-//           <Route element={<AdminDashBoard/>} path="admindashboard"></Route>
-//           <Route element={<TouristDashboard/>} path="touristdashboard"></Route>
-//         </Routes>
-//         <footer>
-//           <FooterHome />
-//         </footer>
-//       </BrowserRouter>
-//     </div>
-//   );
-// };
 
 const App = () => {
   return (
@@ -75,7 +43,7 @@ const App = () => {
           <Route
             path="admin"
             element={
-              <ProtectedRoutes>
+              <ProtectedRoutes role="admin">
                 <AdminDashBoard />
               </ProtectedRoutes>
             }
@@ -83,7 +51,7 @@ const App = () => {
           <Route
             path="analytics"
             element={
-              <ProtectedRoutes>
+              <ProtectedRoutes role="analytic">
                 <AnalyticsDashBoard />
               </ProtectedRoutes>
             }
@@ -91,8 +59,16 @@ const App = () => {
           <Route
             path="tourist"
             element={
-              <ProtectedRoutes>
+              <ProtectedRoutes role="tourist">
                 <TouristDashboard />
+              </ProtectedRoutes>
+            }
+          />
+          <Route
+            path="service"
+            element={
+              <ProtectedRoutes role="service">
+                <ServicePartnerDashboard />
               </ProtectedRoutes>
             }
           />

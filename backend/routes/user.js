@@ -1,5 +1,5 @@
 import express from "express";
-import Usercontroller from "../controller/Usercontroller.js";
+import Usercontroller from "../controllers/user.js";
 import AuthorizationMiddleware from "../middleware/Authorizationmiddleware.js";
 const authorizemiddleware = new AuthorizationMiddleware();
 const usercontroller = new Usercontroller();

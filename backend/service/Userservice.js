@@ -1,4 +1,4 @@
-import User from "../schema/Userschema.js";
+import User from "../models/userSchema.js";
 import bcrypt from "bcrypt";
 import TokenManagement from "../config/JWT.js";
 const tokenManagement = new TokenManagement();

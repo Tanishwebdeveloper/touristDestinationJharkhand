@@ -68,6 +68,16 @@ class Usercontroller {
           .json({ success: false, message: "Invalid credentials" });
       }
 
+      // ADD: Generate token and set cookie
+      const token = await userService.createToken(user.user._id);
+      
+      resp.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 24 * 60 * 60 * 1000,
+      });
+
       return resp.status(200).json({
         success: true,
         message: "Login successful",

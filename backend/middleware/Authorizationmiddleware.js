@@ -1,5 +1,5 @@
 import TokenManagement from "../config/JWT.js";
-import User from "../schema/Userschema.js";
+import User from "../models/userSchema.js";
 const tokenManagement = new TokenManagement();
 
 class AuthorizationMiddleware {
