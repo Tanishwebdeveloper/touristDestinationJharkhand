@@ -342,6 +342,14 @@ export default function ResortFilter() {
     alert(`"${resort.name}" added to cart!`);
   };
 
+  const [addcart, setaddcart] = useState(false);
+
+  // function to  handle the add the cart
+  const addcarthandle = () => {
+    setaddcart(true);
+    console.log(addcart);
+  };
+
   return (
     <div className="bg-gradient-to-br from-white via-amber-50 to-yellow-100 min-h-screen">
       {/* ... Existing hero and filters UI unchanged ... */}

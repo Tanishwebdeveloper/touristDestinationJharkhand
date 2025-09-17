@@ -1,91 +1,105 @@
-import bcrypt from "bcryptjs";
-import { OAuth2Client } from "google-auth-library";
-import jwt from "jsonwebtoken";
-import User from "../models/userSchema.js";
+import Userservice from "../service/Userservice.js";
+import bcrypt from "bcrypt";
 
-export const signupUser = async (req, res) => {
-  try {
-    const { firstName, lastName, emailAddress, password } = req.body;
+const userService = new Userservice();
 
-    const userExists = await User.findOne({ emailAddress });
-    if (userExists) {
-      return res.status(400).json({ message: "User already exists." });
+class Usercontroller {
+  registerUser = async (req, resp) => {
+    try {
+      const { FirstName, LastName, Password, EmailAddress, role } = req.body;
+
+      if (!FirstName || !LastName || !Password || !EmailAddress || !role) {
+        return resp
+          .status(400)
+          .json({ success: false, message: "Fill all the required details" });
+      }
+
+      // create the user by  service
+      const { token, user } = await userService.createUser(req.body);
+
+      if (user && token) {
+        resp.cookie("token", token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production", // only secure in production
+          sameSite: "strict",
+          maxAge: 24 * 60 * 60 * 1000, // 1 day
+        });
+
+        return resp.status(201).json({
+          success: true,
+          message: "User created successfully",
+          user,
+        });
+      }
+    } catch (error) {
+      return resp.status(500).json({ success: false, message: error.message });
     }
+  };
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+  LoginUser = async (req, resp) => {
+    try {
+      const { EmailAddress, Password } = req.body;
 
-    const user = await User.create({
-      firstName,
-      lastName,
-      emailAddress,
-      password: hashedPassword,
-    });
+      if (!EmailAddress || !Password) {
+        return resp.status(400).json({
+          success: false,
+          message: "Please provide both email and password",
+        });
+      }
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+      // find the user by email
+      const user = await userService.verifyUser(EmailAddress);
 
-    res.status(201).json({ user, token });
-  } catch (error) {
-    res.status(500).json({ message: "Error signing up user", error: error.message });
-  }
-};
+      if (!user.success) {
+        return resp
+          .status(404)
+          .json({ success: false, message: "User not found" });
+      }
 
-export const loginUser = async (req, res) => {
-  try {
-    const { emailAddress, password } = req.body;
+      // compare passwords
+      const isMatch = await bcrypt.compare(
+        Password,
+        user.user.Password // hashed password from DB
+      );
 
-    const user = await User.findOne({ emailAddress });
-    if (!user) {
-      return res.status(400).json({ message: "Invalid email or password." });
-    }
+      if (!isMatch) {
+        return resp
+          .status(401)
+          .json({ success: false, message: "Invalid credentials" });
+      }
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid email or password." });
-    }
-
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
-
-    res.json({ user, token });
-  } catch (error) {
-    res.status(500).json({ message: "Error logging in user", error: error.message });
-  }
-};
-
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-
-export const googleLogin = async (req, res) => {
-  try {
-    const { tokenId } = req.body;
-
-    const ticket = await client.verifyIdToken({
-      idToken: tokenId,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-
-    const payload = ticket.getPayload();
-    const { sub: googleId, email, given_name: firstName, family_name: lastName } = payload;
-
-    let user = await User.findOne({ emailAddress: email });
-
-    if (!user) {
-      user = await User.create({
-        firstName,
-        lastName,
-        emailAddress: email,
-        googleId,
+      return resp.status(200).json({
+        success: true,
+        message: "Login successful",
+        user: user.user,
       });
+    } catch (error) {
+      return resp.status(500).json({ success: false, message: error.message });
     }
+  };
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+  // function in the controller for sending the role to frontend
+  verifyrole = async (req, resp) => {
+    try {
+      if (req.role){
+        return resp
+          .status(200)
+          .json({
+            role: req.role,
+            message: "role of the user send succesfully ",
+            success: true,
+          });
+      }
+      else{
+        return resp.status(400).json({message:"role of the user is ont specified"});
+      }
+        
+     
+      return;
+    } catch (error) {
+      throw new Error("Error in the user verify role controller ");
+    }
+  };
+}
 
-    res.json({ user, token });
-  } catch (error) {
-    res.status(500).json({ message: "Google login failed", error: error.message });
-  }
-};
+export default Usercontroller;

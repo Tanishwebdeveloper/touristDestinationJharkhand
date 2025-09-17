@@ -15,9 +15,14 @@ import image14 from "../../assets/image14.png";
 
 import StarComponent from "./StarComponent";
 
-import { useState, Fragment } from "react";
+import React, { useState, useEffect, Fragment } from "react";
+import axios from "axios";
+// import { useState, Fragment } from "react";
+
 import {
   Dialog,
+  DialogBackdrop,
+  DialogPanel,
   Disclosure,
   Menu,
   Transition,
@@ -73,6 +78,39 @@ function classNames(...classes) {
 
 export default function EcommerceFilter() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+
+  const [products, setProducts] = useState([]); // Start with static
+  const [loading, setLoading] = useState(false);
+
+  //For dialog model
+  const [selectedProduct, setSelectedProduct] = useState(null);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        const { data } = await axios.get("/api/products");
+        if (data && data.length > 0) {
+          // Attach images for frontend grid demo
+          const productsWithImages = data.map((prod, idx) => ({
+            ...prod,
+            image: images[idx % images.length],
+          }));
+          setProducts(productsWithImages);
+        }
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+      }
+      setLoading(false);
+    };
+    fetchProducts();
+  }, []);
+
+  const handleAddToCart = (prod) => {
+    // Example: console log or update cart state / API call
+    console.log("Add to cart:", prod);
+    alert(`"${prod.product_name}" added to cart!`);
+  };
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -239,50 +277,98 @@ export default function EcommerceFilter() {
               ))}
             </form>
 
-            {/* Guides Grid */}
             <div className="lg:col-span-3 space-y-6">
-              {items3.map((_, index) => (
+              {loading && <div className="text-center text-gray-400">Loading products...</div>}
+
+              {products.map((prod, index) => (
                 <div
-                  key={index}
-                  className="flex flex-col lg:flex-row gap-6 p-6 bg-white/80 backdrop-blur-md border border-gray-200 rounded-2xl shadow-lg hover:shadow-2xl transition-transform transform hover:-translate-y-1"
+                  key={prod.product_id || index}
+                  className="flex flex-col lg:flex-row gap-6 p-6 bg-white/80 backdrop-blur-md border border-gray-200 rounded-2xl shadow-lg hover:shadow-2xl transition-transform hover:-translate-y-1"
+                  onClick={() => setSelectedProduct(prod)}
                 >
                   {/* Image */}
                   <div className="flex items-center justify-center w-full lg:w-[260px] h-[260px] bg-white rounded-2xl shadow-md">
                     <img
-                      src={images[index % images.length]}
-                      alt="Guide"
+                      src={prod.image}
+                      alt={prod.product_name}
                       className="h-[200px] w-auto object-contain rounded-xl"
                     />
                   </div>
-
                   {/* Content */}
                   <div className="flex flex-col justify-between flex-1">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                      Expert Guide for Your Destination
-                    </h2>
-
-                    <div className="text-green-600 font-bold text-lg mb-2">₹11,999.00</div>
-
+                    <h2 className="text-xl font-semibold text-gray-900 mb-2">{prod.product_name}</h2>
+                    <div className="text-green-600 font-bold text-lg mb-2 line-through">₹{prod.product_real_price}</div>
+                    <div className="text-green-600 font-bold text-lg mb-2">₹{prod.product_discounted_price}</div>
                     <div className="flex items-center mb-2">
                       <StarComponent />
-                      <span className="ml-2 text-gray-500 text-sm">(1,245 reviews)</span>
+                      <span className="ml-2 text-gray-500 text-sm">
+                        ({prod.reviews ? prod.reviews.length : 0} reviews)
+                      </span>
                     </div>
-
                     <p className="text-gray-600 text-sm mb-4 leading-relaxed">
-                      Fluent in Hindi, English & local languages. Experienced in guiding
-                      tourists to explore safely and comfortably.
+                      {prod.product_description}
                     </p>
-
-                    <button className="self-start px-6 py-2 text-sm font-semibold bg-indigo-500 text-white rounded-full hover:bg-indigo-600 transition">
-                      Reserve Guide
+                    <button className="self-start px-6 py-2 text-sm font-semibold bg-indigo-500 text-white rounded-full hover:bg-indigo-600 transition"
+                      onClick={(e) => {
+                          e.stopPropagation(); // Prevent card click when button clicked
+                          handleAddToCart(prod);
+                        }}
+                    >
+                      Add to Cart
                     </button>
                   </div>
-                </div>
+                </div>                
               ))}
             </div>
           </div>
         </section>
       </main>
+
+      {/* MODAL / SHOW ROUTE DETAILS */}
+      <Dialog
+        open={!!selectedProduct}
+        onClose={() => setSelectedGuide(null)}
+        className="fixed z-50 inset-0 overflow-y-auto"
+      >
+        <DialogBackdrop className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
+
+        <DialogPanel className="mx-auto my-10 max-w-lg rounded-3xl bg-white p-6 shadow-xl relative">
+          <button
+            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+            onClick={() => setSelectedProduct(null)}
+            aria-label="Close details"
+          >
+            <XMarkIcon className="h-6 w-6" />
+          </button>
+
+          {selectedProduct && (
+            <>
+              <img
+                src={selectedProduct.image}
+                alt={selectedProduct.product_name}
+                className="rounded-lg w-full h-56 object-cover"
+              />
+              <h2 className="mt-4 text-2xl font-bold text-gray-900">{selectedProduct.product_name}</h2>
+              <p className="mt-2 text-gray-700">{selectedProduct.product_description}</p>
+              <p className="mt-2 font-semibold text-gray-900 line-through">
+                Price: {selectedProduct.product_real_price} rupees
+              </p>
+              <p>Discounted Price: {selectedProduct.product_discounted_price} rupees</p>
+              <div className="mt-4">
+                <button
+                  className="w-full px-6 py-3 rounded-full bg-gradient-to-r from-amber-400 to-pink-500 text-white font-semibold shadow-md hover:shadow-xl hover:scale-105 transition transform duration-300"
+                  onClick={() => {
+                    handleAddToCart(selectedProduct);
+                    setSelectedProduct(null);
+                  }}
+                >
+                  Add to Cart
+                </button>
+              </div>
+            </>
+          )}
+        </DialogPanel>
+      </Dialog>            
     </div>
   );
 }

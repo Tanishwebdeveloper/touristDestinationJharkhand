@@ -334,6 +334,105 @@ export default function AdminDashBoard() {
       alert("Failed to create driver");
     }
   };
+
+  // State hooks for EcommerceProduct section
+  const [products, setProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [productFormData, setProductFormData] = useState({
+    product_id: "",
+    product_name: "",
+    product_real_price: "",
+    product_discounted_price: "",
+    product_description: "",
+  });
+
+  // Fetch products on section change
+  useEffect(() => {
+    if (activeSection === "products") {
+      fetchProducts();
+    }
+  }, [activeSection]);
+
+  const fetchProducts = async () => {
+    setLoadingProducts(true);
+    try {
+      const { data } = await axios.get("/api/products");
+      setProducts(data);
+    } catch (error) {
+      console.error("Error fetching products", error);
+    }
+    setLoadingProducts(false);
+  };
+
+  const handleProductEditClick = (product) => {
+    setEditingProduct(product);
+    setProductFormData({
+      product_id: product.product_id,
+      product_name: product.product_name,
+      product_real_price: product.product_real_price,
+      product_discounted_price: product.product_discounted_price,
+      product_description: product.product_description,
+    });
+  };
+
+  const handleProductDeleteClick = async (productId) => {
+    if (window.confirm("Are you sure to delete this product?")) {
+      try {
+        await axios.delete(`/api/products/${productId}`);
+        setProducts(products.filter(p => p._id !== productId));
+      } catch (error) {
+        alert("Failed to delete product");
+      }
+    }
+  };
+
+  const handleProductFormChange = (e) => {
+    setProductFormData({ ...productFormData, [e.target.name]: e.target.value });
+  };
+
+  const handleProductUpdateSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const { data } = await axios.put(`/api/products/${editingProduct._id}`, productFormData);
+      setProducts(products.map(p => (p._id === data._id ? data : p)));
+      setEditingProduct(null);
+      alert("Product updated successfully");
+    } catch (error) {
+      alert("Failed to update product");
+    }
+  };
+
+  // Create new product
+  const [newProductData, setNewProductData] = useState({
+    product_id: "",
+    product_name: "",
+    product_real_price: "",
+    product_discounted_price: "",
+    product_description: "",
+  });
+
+  const handleNewProductInputChange = (e) => {
+    setNewProductData({ ...newProductData, [e.target.name]: e.target.value });
+  };
+
+  const handleCreateProduct = async (e) => {
+    e.preventDefault();
+    try {
+      const { data } = await axios.post("/api/products", newProductData);
+      setProducts([...products, data]);
+      setNewProductData({
+        product_id: "",
+        product_name: "",
+        product_real_price: "",
+        product_discounted_price: "",
+        product_description: "",
+      });
+      alert("Product created successfully");
+    } catch (error) {
+      alert("Failed to create product");
+    }
+  };
   
   return (
     <div className="font-roboto bg-orange-50 text-gray-800 min-h-screen">
@@ -375,7 +474,7 @@ export default function AdminDashBoard() {
 
       {/* Navigation */}
       <div className="bg-gray-100 rounded-3xl flex justify-center gap-4 py-3 px-5 mt-6 mx-6">
-        {["user-management", "approvals", "destinations", "guides", "drivers", "reports"].map(
+        {["user-management", "approvals", "destinations", "guides", "drivers", "products", "reports"].map(
           (item) => (
             <button
               key={item}
@@ -1043,7 +1142,179 @@ export default function AdminDashBoard() {
               </table>
             )}
           </div>
-)}
+        )}
+
+        {activeSection === "products" && (
+          <div>
+            <h2 className="text-lg font-bold mb-4">E-commerce Products Management</h2>
+        
+            {/* Create new product form */}
+            <div className="mb-6 p-4 border rounded-lg bg-gray-50 max-w-3xl">
+              <h3 className="font-bold mb-2 text-lg">Add New Product</h3>
+              <form onSubmit={handleCreateProduct} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input
+                  name="product_id"
+                  placeholder="Product ID"
+                  value={newProductData.product_id}
+                  onChange={handleNewProductInputChange}
+                  required
+                  className="border rounded px-3 py-2"
+                />
+                <input
+                  name="product_name"
+                  placeholder="Product Name"
+                  value={newProductData.product_name}
+                  onChange={handleNewProductInputChange}
+                  required
+                  className="border rounded px-3 py-2"
+                />
+                <input
+                  name="product_real_price"
+                  type="number"
+                  placeholder="Real Price"
+                  value={newProductData.product_real_price}
+                  onChange={handleNewProductInputChange}
+                  required
+                  className="border rounded px-3 py-2"
+                />
+                <input
+                  name="product_discounted_price"
+                  type="number"
+                  placeholder="Discounted Price"
+                  value={newProductData.product_discounted_price}
+                  onChange={handleNewProductInputChange}
+                  required
+                  className="border rounded px-3 py-2"
+                />
+                <textarea
+                  name="product_description"
+                  placeholder="Description"
+                  value={newProductData.product_description}
+                  onChange={handleNewProductInputChange}
+                  rows="3"
+                  className="border rounded px-3 py-2 md:col-span-2"
+                />
+                <button
+                  type="submit"
+                  className="md:col-span-2 bg-green-600 text-white rounded px-4 py-2 hover:bg-green-700"
+                >
+                  Create Product
+                </button>
+              </form>
+            </div>
+        
+            {/* Editing Product */}
+            {editingProduct && (
+              <div className="mt-6 bg-gray-100 p-4 rounded-lg max-w-3xl">
+                <h3 className="font-bold mb-2">Edit Product: {editingProduct.product_name}</h3>
+                <form onSubmit={handleProductUpdateSubmit} className="space-y-4">
+                  <input
+                    name="product_id"
+                    placeholder="Product ID"
+                    value={productFormData.product_id}
+                    onChange={handleProductFormChange}
+                    required
+                    className="border rounded px-3 py-2"
+                  />
+                  <input
+                    name="product_name"
+                    placeholder="Product Name"
+                    value={productFormData.product_name}
+                    onChange={handleProductFormChange}
+                    required
+                    className="border rounded px-3 py-2"
+                  />
+                  <input
+                    name="product_real_price"
+                    type="number"
+                    placeholder="Real Price"
+                    value={productFormData.product_real_price}
+                    onChange={handleProductFormChange}
+                    required
+                    className="border rounded px-3 py-2"
+                  />
+                  <input
+                    name="product_discounted_price"
+                    type="number"
+                    placeholder="Discounted Price"
+                    value={productFormData.product_discounted_price}
+                    onChange={handleProductFormChange}
+                    required
+                    className="border rounded px-3 py-2"
+                  />
+                  <textarea
+                    name="product_description"
+                    placeholder="Description"
+                    value={productFormData.product_description}
+                    onChange={handleProductFormChange}
+                    rows="3"
+                    className="border rounded px-3 py-2"
+                  />
+                  <div className="flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setEditingProduct(null)}
+                      className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                    >
+                      Update
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* Display Products Table */}
+            {loadingProducts ? (
+              <p>Loading products...</p>
+            ) : (
+              <table className="min-w-full bg-white border max-w-4xl">
+                <thead>
+                  <tr>
+                    <th className="border px-4 py-2">Product ID</th>
+                    <th className="border px-4 py-2">Name</th>
+                    <th className="border px-4 py-2">Real Price</th>
+                    <th className="border px-4 py-2">Discounted Price</th>
+                    <th className="border px-4 py-2">Description</th>
+                    <th className="border px-4 py-2">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {products.map((p) => (
+                    <tr key={p._id} className="hover:bg-gray-100">
+                      <td className="border px-4 py-2">{p.product_id}</td>
+                      <td className="border px-4 py-2">{p.product_name}</td>
+                      <td className="border px-4 py-2">₹{p.product_real_price}</td>
+                      <td className="border px-4 py-2">₹{p.product_discounted_price}</td>
+                      <td className="border px-4 py-2">{p.product_description}</td>
+                      <td className="border px-4 py-2 flex gap-2">
+                        <button
+                          onClick={() => handleProductEditClick(p)}
+                          className="text-blue-600 hover:text-blue-800"
+                          title="Edit"
+                        >
+                          <FaPenToSquare />
+                        </button>
+                        <button
+                          onClick={() => handleProductDeleteClick(p._id)}
+                          className="text-red-600 hover:text-red-800"
+                          title="Delete"
+                        >
+                          <FaCircleXmark />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
 
         {activeSection === "reports" && (
           <div>

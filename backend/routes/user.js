@@ -1,15 +1,22 @@
 import express from "express";
-import { signupUser, loginUser, googleLogin } from "../controllers/userController.js";
-
+import Usercontroller from "../controller/Usercontroller.js";
+import AuthorizationMiddleware from "../middleware/Authorizationmiddleware.js";
+const authorizemiddleware = new AuthorizationMiddleware();
+const usercontroller = new Usercontroller();
 const router = express.Router();
 
-// Local signup route
-router.post("/signup", signupUser);
+// now we shall make the routes for creating the user
 
-// Local login route
-router.post("/login", loginUser);
+router.post("/registeruser", usercontroller.registerUser);
+router.post("/loginuser", usercontroller.LoginUser);
 
-// Google login route
-router.post("/google-login", googleLogin);
+// also we are mentioning the routes for the authorization of the  user
+
+router.get(
+  "/authorizerole",
+  authorizemiddleware.authmiddleware,
+  authorizemiddleware.authorizemiddleware,
+  usercontroller.verifyrole
+);
 
 export default router;

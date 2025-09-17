@@ -12,7 +12,7 @@ export default function Navbar() {
     { name: "Guides", path: "/guidepage" },
     { name: "Drivers", path: "/driverpage" },
     { name: "Orders", path: "/orderpage" },
-    { name: "Cart", path: "/ecommercecartpage" },
+    { name: "Products", path: "/ecommercecartpage" },
     { name: "Login", path: "/loginpage" },
     { name: "Signup", path: "/signuppage" },
     {name:"DashBoard", path:"/dashboard"}
