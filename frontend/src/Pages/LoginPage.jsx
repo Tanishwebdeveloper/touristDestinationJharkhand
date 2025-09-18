@@ -43,6 +43,9 @@ export default function LoginPage() {
 
         localStorage.setItem("userRole", userRole);
 
+        // Dispatch custom event to notify Navbar
+        window.dispatchEvent(new Event('authStateChanged'));
+
         // Role-based redirect
         switch (userRole.toLowerCase()) {
           case "tourist":
