@@ -5,19 +5,31 @@ import {
   ClipboardDocumentListIcon,
   CalendarDaysIcon,
   XMarkIcon,
+  BuildingOfficeIcon,
+  UserIcon,
+  TruckIcon,
+  ShoppingCartIcon,
+  Cog6ToothIcon,
 } from "@heroicons/react/24/outline";
 import { Link } from "react-router-dom";
 
-const sidebarLinks = [
-  { name: "Home", icon: HomeIcon, to: "/" },
-  { name: "Resorts", icon: CalendarDaysIcon, to: "/resortpage" },
-  { name: "Guides", icon: ClipboardDocumentListIcon, to: "/guidepage" },
-  { name: "Orders", icon: ClipboardDocumentListIcon, to: "/orderpage" },
-  { name: "Cart", icon: ClipboardDocumentListIcon, to: "/ecommercecartpage" },
-  { name: "Signup", icon: UserPlusIcon, to: "/signuppage" },
-];
+// Icon mapping for dynamic nav items
+const getIconForNavItem = (name) => {
+  const iconMap = {
+    Home: HomeIcon,
+    Resorts: BuildingOfficeIcon,
+    Guides: UserIcon,
+    Drivers: TruckIcon,
+    Orders: ClipboardDocumentListIcon,
+    Products: ShoppingCartIcon,
+    Dashboard: Cog6ToothIcon,
+    Login: UserPlusIcon,
+    Signup: UserPlusIcon,
+  };
+  return iconMap[name] || ClipboardDocumentListIcon;
+};
 
-export default function Sidebar({ isOpen, onClose }) {
+export default function Sidebar({ isOpen, onClose, navItems }) {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -55,30 +67,43 @@ export default function Sidebar({ isOpen, onClose }) {
             {/* Links */}
             <nav className="flex-1 overflow-y-auto py-4">
               <ul className="space-y-2 px-3">
-                {sidebarLinks.map((item) => (
-                  <li key={item.name}>
-                    <Link
-                      to={item.to}
-                      onClick={onClose}
-                      className="flex items-center gap-3 rounded-lg px-4 py-2 text-gray-700 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-600 transition-all"
-                    >
-                      <item.icon className="h-5 w-5 text-gray-500" />
-                      <span className="text-sm font-medium">{item.name}</span>
-                    </Link>
-                  </li>
-                ))}
+                {navItems.map((item) => {
+                  const IconComponent = getIconForNavItem(item.name);
+                  
+                  return (
+                    <li key={item.name}>
+                      {item.onClick ? (
+                        // Render button for logout
+                        <button
+                          onClick={() => {
+                            item.onClick();
+                            onClose();
+                          }}
+                          className="flex items-center gap-3 rounded-lg px-4 py-2 text-gray-700 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-600 transition-all w-full text-left"
+                        >
+                          <IconComponent className="h-5 w-5 text-gray-500" />
+                          <span className="text-sm font-medium">{item.name}</span>
+                        </button>
+                      ) : (
+                        // Render Link for other items
+                        <Link
+                          to={item.path}
+                          onClick={onClose}
+                          className="flex items-center gap-3 rounded-lg px-4 py-2 text-gray-700 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-600 transition-all"
+                        >
+                          <IconComponent className="h-5 w-5 text-gray-500" />
+                          <span className="text-sm font-medium">{item.name}</span>
+                        </Link>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </nav>
 
-            {/* Footer */}
-            <div className="border-t border-gray-200 p-4">
-              <Link
-                to="/loginpage"
-                onClick={onClose}
-                className="block w-full rounded-md bg-gradient-to-r from-indigo-600 to-purple-600 text-center text-white font-medium py-2 hover:opacity-90 transition"
-              >
-                Login
-              </Link>
+            {/* Footer - You can remove this since Login/Logout is now in the nav items */}
+            <div className="border-t border-gray-200 p-4 text-center text-xs text-gray-500">
+              © 2024 Jharkhand Darshan
             </div>
           </motion.div>
         </>
