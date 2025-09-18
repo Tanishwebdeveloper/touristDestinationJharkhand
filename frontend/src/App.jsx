@@ -11,6 +11,7 @@ import DriverPage from "./Pages/DriverPage.jsx";
 import Navbar from "./Components/Navbar.jsx";
 import FooterHome from "./Components/HomePageComponent/FooterHome.jsx";
 import EcommerceCartPage from "./Pages/EcommrceCartPage.jsx";
+import CartPage from "./Pages/CartPage";
 import ProtectedRoutes from "./Pages/DashBoard/ProtectedRoutes.jsx";
 import AdminDashBoard from "./Pages/DashBoard/AdminDashBoard.jsx";
 import TouristDashboard from "./Pages/DashBoard/TouristDashboard.jsx";
@@ -39,6 +40,15 @@ const App = () => {
             path="ecommercecartpage"
           ></Route>
           <Route element={<ProtectedRoutes />} path="dashboard"></Route>
+
+          <Route
+            path="cart"
+            element={
+              <ProtectedRoutes>
+                <CartPage />
+              </ProtectedRoutes>
+            }
+          />
 
           <Route
             path="admin"

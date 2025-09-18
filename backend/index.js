@@ -20,6 +20,7 @@ import guideRoutes from "./routes/guide.js";
 import orderRoutes from "./routes/order.js";
 import driverRoutes from "./routes/driver.js";
 import ecommerceProductRoutes from "./routes/ecommerceProduct.js";
+import cartRoutes from "./routes/cart.js";
 import userRoutes from "./routes/user.js";
 
 app.use("/api/resorts", resortRoutes);
@@ -28,6 +29,7 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/drivers", driverRoutes);
 app.use("/api/products", ecommerceProductRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/cart", cartRoutes);
 
 app.listen(port, ()=>{
    console.log(`Server is running on the port ${port} `);

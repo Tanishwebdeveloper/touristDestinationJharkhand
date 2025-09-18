@@ -43,6 +43,13 @@ const ProtectedRoutes = ({ role, children }) => {
   const [allowed, setAllowed] = useState(null);
 
   useEffect(() => {
+    // If no role is specified, just check if user is authenticated
+    if (!role) {
+      const userRole = localStorage.getItem("userRole");
+      setAllowed(!!userRole);
+      return;
+    }
+    
     axios
       .get("http://localhost:5000/api/users/authorizerole", { withCredentials: true })
       .then((resp) => {

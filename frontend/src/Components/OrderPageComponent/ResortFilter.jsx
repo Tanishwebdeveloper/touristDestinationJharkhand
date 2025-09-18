@@ -161,10 +161,25 @@ export default function ResortFilter() {
   };
 
   // Handler for Add to Cart button (implement as needed)
-  const handleAddToCart = (resort) => {
-    // Example: console log or update cart state / API call
-    console.log("Add to cart:", resort);
-    alert(`"${resort.name}" added to cart!`);
+  // Add to cart API call
+  const handleAddToCart = async (resort) => {
+    try {
+      const payload = {
+        itemType: "Resort",
+        itemId: resort._id,
+        quantity: 1,
+      };
+      const { data } = await axios.post(
+        "http://localhost:5000/api/cart/add",
+        payload,
+        { withCredentials: true }
+      );
+      console.log("Cart:", data);
+      alert(`"${resort.name}" added to cart!`);
+    } catch (err) {
+      console.error("Add to cart failed:", err);
+      alert("Failed to add to cart.");
+    }
   };
 
   // Check for redirect after login on component mount

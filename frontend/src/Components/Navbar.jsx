@@ -55,6 +55,7 @@ export default function Navbar() {
     { name: "Drivers", path: "/driverpage" },
     { name: "Orders", path: "/orderpage" },
     { name: "Products", path: "/ecommercecartpage" },
+    { name: "Cart", path: "/cart" }
     // { name: "Login", path: "/loginpage" },
     // { name: "Signup", path: "/signuppage" },
     // {name:"DashBoard", path:"/dashboard"}

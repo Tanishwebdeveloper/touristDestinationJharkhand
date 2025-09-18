@@ -1,9 +1,23 @@
 import mongoose from "mongoose";
 
-const cartSchema = new mongoose.Schema({
-  cart_id: { type: String, required: true, unique: true },
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  products: [{ type: mongoose.Schema.Types.ObjectId, ref: 'EcommerceProduct' }],
+const cartItemSchema = new mongoose.Schema({
+  itemType: {
+    type: String,
+    enum: ["Resort", "Guide", "Driver", "Product"],
+    required: true
+  },
+  item: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    refPath: "items.itemType"   // dynamically reference the correct collection
+  },
+  quantity: { type: Number, default: 1, min: 1 }
 });
 
-export default mongoose.model('Cart', cartSchema);
+const cartSchema = new mongoose.Schema({
+  cart_id: { type: String, required: true, unique: true },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, unique: true },
+  items: [cartItemSchema]
+}, { timestamps: true });
+
+export default mongoose.model("Cart", cartSchema);
