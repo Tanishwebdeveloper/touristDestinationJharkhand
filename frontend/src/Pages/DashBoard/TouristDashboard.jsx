@@ -1,6 +1,35 @@
 import React from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { useLocation } from "react-router-dom";
 
 export default function TouristDashboard() {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("destinations");
+  const location = useLocation();
+
+  useEffect(() => {
+    // Show success message if coming from payment page
+    if (location.state?.success) {
+      alert(location.state.message);
+    }
+    
+    // Fetch user's orders
+    const fetchOrders = async () => {
+      try {
+        const { data } = await axios.get("http://localhost:5000/api/orders", { withCredentials: true });
+        setOrders(data);
+      } catch (err) {
+        console.error("Failed to load orders:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchOrders();
+  }, [location]);  
+  
   return (
     <div className="font-roboto bg-orange-50 text-gray-800 min-h-screen">
 
@@ -49,16 +78,55 @@ export default function TouristDashboard() {
         <div className="flex-2 w-2/3">
           {/* Tabs */}
           <div className="flex gap-3 mb-6">
-            <button className="bg-gradient-to-r from-orange-500 to-red-600 text-white px-4 py-2 rounded-full text-sm">
+            <button 
+              className={`${activeTab === 'destinations' ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white' : 'bg-white shadow'} px-4 py-2 rounded-full text-sm`}
+              onClick={() => setActiveTab('destinations')}
+            >
               Destinations
             </button>
-            <button className="bg-white shadow px-4 py-2 rounded-full text-sm">
+            <button 
+              className={`${activeTab === 'orders' ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white' : 'bg-white shadow'} px-4 py-2 rounded-full text-sm`}
+              onClick={() => setActiveTab('orders')}
+            >
+              My Orders
+            </button>
+            <button 
+              className={`${activeTab === 'partners' ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white' : 'bg-white shadow'} px-4 py-2 rounded-full text-sm`}
+              onClick={() => setActiveTab('partners')}
+            >
               Service Partners
             </button>
-            <button className="bg-white shadow px-4 py-2 rounded-full text-sm">
-              Special Offers
-            </button>
           </div>
+
+          {/* Orders Section */}
+          {activeTab === 'orders' && (
+            <div>
+              <h3 className="text-lg font-semibold mb-4">My Orders</h3>
+              
+              {loading ? (
+                <p>Loading your orders...</p>
+              ) : orders.length === 0 ? (
+                <p>You don't have any orders yet.</p>
+              ) : (
+                <div className="space-y-4">
+                  {orders.map(order => (
+                    <div key={order._id} className="flex gap-4 bg-white p-4 rounded-xl shadow mb-4">
+                      <div className="flex-1">
+                        <h4 className="font-semibold">{order.location}</h4>
+                        <p className="text-sm text-gray-500">Order ID: {order.order_id}</p>
+                        <div className="mt-2">
+                          {order.resort && <p className="text-sm">Resort: {order.resort.name}</p>}
+                          {order.guide && <p className="text-sm">Guide: {order.guide.name}</p>}
+                          {order.driver && <p className="text-sm">Driver: {order.driver.name}</p>}
+                          {order.product && <p className="text-sm">Product: {order.product.product_name}</p>}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}    
 
           {/* Popular Destinations */}
           <div>
@@ -198,7 +266,7 @@ export default function TouristDashboard() {
               </button>
             </div>
           </div>
-        </div>
+        </div>    
       </section>
     </div>
   );

@@ -11,7 +11,7 @@ export default function SignupPage() {
     LastName: "",
     EmailAddress: "",
     Password: "",
-    role: "",
+    role: "tourist",
   });
 
   const ChangeHandler = (e) => {

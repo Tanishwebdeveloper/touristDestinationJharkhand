@@ -125,10 +125,24 @@ export default function EcommerceFilter() {
     handleAddToCart(prod);
   };
 
-  const handleAddToCart = (prod) => {
-    // Example: console log or update cart state / API call
-    console.log("Add to cart:", prod);
-    alert(`"${prod.product_name}" added to cart!`);
+  const handleAddToCart = async (prod) => {
+    try {
+      const payload = {
+        itemType: "EcommerceProduct",
+        itemId: prod._id,
+        quantity: 1,
+      };
+      const { data } = await axios.post(
+        "http://localhost:5000/api/cart/add",
+        payload,
+        { withCredentials: true }
+      );
+      console.log("Cart:", data);
+      alert(`"${prod.product_name}" added to cart!`);
+    } catch (err) {
+      console.error("Add to cart failed", err);
+      alert("Failed to add to cart.");
+    }
   };
 
   useEffect(() => {

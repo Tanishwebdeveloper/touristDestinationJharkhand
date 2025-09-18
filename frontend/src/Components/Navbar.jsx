@@ -53,7 +53,7 @@ export default function Navbar() {
     { name: "Resorts", path: "/resortpage" },
     { name: "Guides", path: "/guidepage" },
     { name: "Drivers", path: "/driverpage" },
-    { name: "Orders", path: "/orderpage" },
+    // { name: "Orders", path: "/orderpage" },
     { name: "Products", path: "/ecommercecartpage" },
     { name: "Cart", path: "/cart" }
     // { name: "Login", path: "/loginpage" },

@@ -116,10 +116,24 @@ export default function DriverFilter() {
   };
 
   // Original add to cart handler (for logged-in users)
-  const handleAddToCart = (driver) => {
-    console.log("Book driver:", driver);
-    alert(`"${driver.name}" booked successfully!`);
-    // Here you would typically make an API call to add to cart/bookings
+  const handleAddToCart = async (driver) => {
+    try {
+      const payload = {
+        itemType: "Driver",
+        itemId: driver._id,
+        quantity: 1,
+      };
+      const { data } = await axios.post(
+        "http://localhost:5000/api/cart/add",
+        payload,
+        { withCredentials: true }
+      );
+      console.log("Cart:", data);
+      alert(`"${driver.name}" added to cart!`);
+    } catch (err) {
+      console.error("Add to cart failed", err);
+      alert("Failed to add to cart.");
+    }
   };
 
   // Check for redirect after login on component mount

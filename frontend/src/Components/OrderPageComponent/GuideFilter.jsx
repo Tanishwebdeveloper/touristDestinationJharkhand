@@ -120,6 +120,27 @@ export default function GuideFilter() {
     fetchGuides();
   }, []);
 
+  // Add to cart API call
+  const handleAddToCart = async (guide) => {
+    try {
+      const payload = {
+        itemType: "Guide",
+        itemId: guide._id,
+        quantity: 1,
+      };
+      const { data } = await axios.post(
+        "http://localhost:5000/api/cart/add",
+        payload,
+        { withCredentials: true }
+      );
+      console.log("Cart:", data);
+      alert(`"${guide.name}" added to cart!`);
+    } catch (err) {
+      console.error("Add to cart failed", err);
+      alert("Failed to add to cart.");
+    }
+  };
+
   // Handler for Reserve Now button - check auth first
   const handleReserveNow = (guide) => {
     if (!isLoggedIn()) {
@@ -138,12 +159,6 @@ export default function GuideFilter() {
 
     // User is logged in, proceed with reservation
     handleAddToCart(guide);
-  };
-  
-  const handleAddToCart = (guide) => {
-    // Example: console log or update cart state / API call
-    console.log("Add to cart:", guide);
-    alert(`"${guide.name}" added to cart!`);
   };
 
   // Check for redirect after login on component mount

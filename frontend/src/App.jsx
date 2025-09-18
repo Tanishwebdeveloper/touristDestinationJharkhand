@@ -13,7 +13,7 @@ import FooterHome from "./Components/HomePageComponent/FooterHome.jsx";
 import EcommerceCartPage from "./Pages/EcommrceCartPage.jsx";
 import CartPage from "./Pages/CartPage";
 import ProtectedRoutes from "./Pages/DashBoard/ProtectedRoutes.jsx";
-import AdminDashBoard from "./Pages/DashBoard/AdminDashBoard.jsx";
+import AdminDashBoard from "./Pages/DashBoard/AdminDashboard/AdminDashBoard.jsx";
 import TouristDashboard from "./Pages/DashBoard/TouristDashboard.jsx";
 import AnalyticsDashBoard from "./Pages/DashBoard/AnalyticsDashBoard.jsx";
 import ServicePartnerDashboard from "./Pages/DashBoard/ServicePartnerDashBoard.jsx";
@@ -35,6 +35,7 @@ const App = () => {
           <Route element={<ResortPage />} path="resortpage"></Route>
           <Route element={<GuidePage />} path="guidepage"></Route>
           <Route element={<DriverPage/>} path="driverpage"></Route>
+          <Route element={<PaymentPage/>} path="payment"></Route>
           <Route
             element={<EcommerceCartPage />}
             path="ecommercecartpage"

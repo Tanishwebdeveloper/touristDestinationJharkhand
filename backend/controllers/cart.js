@@ -1,4 +1,6 @@
 import Cart from "../models/cartSchema.js";
+import Order from "../models/orderSchema.js";
+import mongoose from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 
 // Get or create the current user's cart
@@ -66,4 +68,46 @@ export const clearCart = async (req, res) => {
   cart.items = [];
   await cart.save();
   res.json({ message: "Cart cleared" });
+};
+
+export const checkout = async (req, res) => {
+  try {
+    const userId = req.userid;
+    const { location } = req.body;
+    
+    // Get the user's cart
+    const cart = await Cart.findOne({ user: userId }).populate("items.item");
+    if (!cart || cart.items.length === 0) {
+      return res.status(400).json({ message: "Cart is empty" });
+    }
+    
+    // Create a new order
+    const orderData = {
+      order_id: uuidv4(),
+      user: userId,
+      location: location || "Online Purchase",
+    };
+    
+    // Add items based on their type (only first item of each type)
+    cart.items.forEach(item => {
+      if (item.itemType === "Resort" && !orderData.resort) {
+        orderData.resort = item.item._id;
+      } else if (item.itemType === "Guide" && !orderData.guide) {
+        orderData.guide = item.item._id;
+      } else if (item.itemType === "Driver" && !orderData.driver) {
+        orderData.driver = item.item._id;
+      } else if (item.itemType === "EcommerceProduct" && !orderData.product) {
+        orderData.product = item.item._id;
+      }
+    });
+    
+    // Create the order
+    const Order = mongoose.model('Order');
+    const newOrder = new Order(orderData);
+    await newOrder.save();
+    
+    res.status(201).json(newOrder);
+  } catch (err) {
+    res.status(400).json({ message: "Error creating order", error: err.message });
+  }
 };
