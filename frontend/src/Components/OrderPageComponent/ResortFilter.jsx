@@ -60,12 +60,12 @@ const filters = [
     id: "Resort",
     name: "Resort Type",
     options: [
-      { value: "Beach", label: "Beach" },
-      { value: "Mountain", label: "Mountain" },
-      { value: "Island", label: "Island" },
-      { value: "Luxury", label: "Luxury" },
-      { value: "Eco", label: "Eco-Friendly" },
-      { value: "Wellness", label: "Wellness & Spa" },
+      { value: "Beach", label: "Beach", checked: false },
+      { value: "Mountain", label: "Mountain", checked: false },
+      { value: "Island", label: "Island", checked: false },
+      { value: "Luxury", label: "Luxury", checked: false },
+      { value: "Eco", label: "Eco-Friendly", checked: false },
+      { value: "Wellness", label: "Wellness & Spa", checked: false },
     ],
   },
 ];
@@ -106,11 +106,15 @@ export default function ResortFilter() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [resorts, setResorts] = useState(staticResorts);
   const [loading, setLoading] = useState(false);
-
-  // NEW: Track selected resort for show modal
   const [selectedResort, setSelectedResort] = useState(null);
+  
+  // NEW: Add filter state
+  const [activeFilters, setActiveFilters] = useState({});
+  // NEW: Add sort state
+  const [sortOption, setSortOption] = useState("default");
+  // NEW: Add original resorts state to keep unfiltered data
+  const [originalResorts, setOriginalResorts] = useState([]);
 
-  //Tracking whether you are logged in or not
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -131,6 +135,7 @@ export default function ResortFilter() {
             image: images[idx % images.length],
           }));
           setResorts(resortsWithImages);
+          setOriginalResorts(resortsWithImages); // Store original data
         }
       } catch (error) {
         console.error("Failed to fetch resorts:", error);
@@ -204,13 +209,51 @@ export default function ResortFilter() {
     }
   }, [location, navigate]);
 
-  // const [addcart, setaddcart] = useState(false);
+  // NEW: Handle filter change
+  const handleFilterChange = (sectionId, optionValue, isChecked) => {
+    setActiveFilters(prev => {
+      const newFilters = { ...prev };
+      if (!newFilters[sectionId]) {
+        newFilters[sectionId] = [];
+      }
 
-  // // function to  handle the add the cart
-  // const addcarthandle = () => {
-  //   setaddcart(true);
-  //   console.log(addcart);
-  // };
+      if (isChecked) {
+        newFilters[sectionId] = [...newFilters[sectionId], optionValue];
+      } else {
+        newFilters[sectionId] = newFilters[sectionId].filter(val => val !== optionValue);
+      }
+
+      return newFilters;
+    });
+  };
+
+  // NEW: Handle sort change
+  const handleSortChange = (option) => {
+    setSortOption(option);
+  };
+
+  // NEW: Apply filters and sorting
+  useEffect(() => {
+    if (originalResorts.length === 0) return;
+
+    let filteredResults = [...originalResorts];
+
+    // Apply type filters
+    if (activeFilters.Resort && activeFilters.Resort.length > 0) {
+      filteredResults = filteredResults.filter(resort => 
+        activeFilters.Resort.includes(resort.type)
+      );
+    }
+
+    // Apply sorting
+    if (sortOption === "price-low-high") {
+      filteredResults.sort((a, b) => a.cost - b.cost);
+    } else if (sortOption === "price-high-low") {
+      filteredResults.sort((a, b) => b.cost - a.cost);
+    }
+
+    setResorts(filteredResults);
+  }, [activeFilters, sortOption, originalResorts]);  
 
   return (
     <div className="bg-gradient-to-br from-white via-amber-50 to-yellow-100 min-h-screen">
@@ -226,7 +269,6 @@ export default function ResortFilter() {
       </div>
 
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative -mt-20 z-20">
-        {/* ... existing sort and filter bar here ... */}
         <div className="flex items-baseline justify-between border-b border-gray-200 pb-6">
           <h2 className="text-3xl font-extrabold text-gray-900">Handpicked For You</h2>
           <div className="flex items-center gap-4">
@@ -235,14 +277,17 @@ export default function ResortFilter() {
                 Sort by
                 <ChevronDownIcon className="h-5 w-5 text-gray-500" />
               </MenuButton>
-              <MenuItems className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-lg overflow-hidden ring-1 ring-black/10">
+              {/* FIXED: Added z-index and improved positioning */}
+              <MenuItems className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-lg overflow-hidden ring-1 ring-black/10 z-50">
                 <MenuItem>
                   {({ active }) => (
                     <button
                       className={classNames(
                         "block px-4 py-2 text-sm w-full text-left",
-                        active ? "bg-gray-100" : ""
+                        active ? "bg-gray-100" : "",
+                        sortOption === "price-low-high" ? "font-semibold" : ""
                       )}
+                      onClick={() => handleSortChange("price-low-high")}
                     >
                       Price: Low to High
                     </button>
@@ -253,8 +298,10 @@ export default function ResortFilter() {
                     <button
                       className={classNames(
                         "block px-4 py-2 text-sm w-full text-left",
-                        active ? "bg-gray-100" : ""
+                        active ? "bg-gray-100" : "",
+                        sortOption === "price-high-low" ? "font-semibold" : ""
                       )}
+                      onClick={() => handleSortChange("price-high-low")}
                     >
                       Price: High to Low
                     </button>
@@ -277,10 +324,9 @@ export default function ResortFilter() {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
             {/* Filters */}
             <aside className="hidden lg:block glassmorphism rounded-2xl p-6 shadow-xl bg-white/80 backdrop-blur-sm">
-              {/* Filters UI unchanged */}
-             <h3 className="font-semibold text-lg text-gray-900 mb-4">Filters</h3>
+              <h3 className="font-semibold text-lg text-gray-900 mb-4">Filters</h3>
               {filters.map((section) => (
-                <Disclosure key={section.id} className="mt-6">
+                <Disclosure key={section.id} className="mt-6" defaultOpen={true}>
                   {({ open }) => (
                     <>
                       <DisclosureButton className="flex justify-between w-full text-left text-gray-700 font-medium">
@@ -297,6 +343,8 @@ export default function ResortFilter() {
                             <input
                               type="checkbox"
                               className="h-4 w-4 rounded border-gray-300 text-indigo-600"
+                              checked={activeFilters[section.id]?.includes(option.value) || false}
+                              onChange={(e) => handleFilterChange(section.id, option.value, e.target.checked)}
                             />
                             <span className="text-gray-600">{option.label}</span>
                           </label>

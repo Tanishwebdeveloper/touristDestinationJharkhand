@@ -88,6 +88,13 @@ export default function GuideFilter() {
   // NEW: Track selected guide for show modal
   const [selectedGuide, setSelectedGuide] = useState(null);
 
+  // NEW: Add filter state
+  const [activeFilters, setActiveFilters] = useState({});
+  // NEW: Add sort state
+  const [sortOption, setSortOption] = useState("default");
+  // NEW: Add original guides state to keep unfiltered data
+  const [originalGuides, setOriginalGuides] = useState([]);
+
   //Tracking whether you are logged in or not
   const navigate = useNavigate();
   const location = useLocation();
@@ -110,6 +117,7 @@ export default function GuideFilter() {
             image: images[idx % images.length],
           }));
           setGuides(guidesWithImages);
+          setOriginalGuides(guidesWithImages); // Store original data
         }
       } catch (err) {
         // optional: handle error
@@ -182,6 +190,75 @@ export default function GuideFilter() {
       }
     }
   }, [location, navigate]);
+
+  // NEW: Handle filter change
+  const handleFilterChange = (sectionId, optionValue, isChecked) => {
+    setActiveFilters(prev => {
+      const newFilters = { ...prev };
+      if (!newFilters[sectionId]) {
+        newFilters[sectionId] = [];
+      }
+      
+      if (isChecked) {
+        newFilters[sectionId] = [...newFilters[sectionId], optionValue];
+      } else {
+        newFilters[sectionId] = newFilters[sectionId].filter(val => val !== optionValue);
+      }
+      
+      return newFilters;
+    });
+  };
+
+  // NEW: Handle sort change
+  const handleSortChange = (option) => {
+    setSortOption(option);
+  };
+
+  // NEW: Apply filters and sorting
+  useEffect(() => {
+    if (originalGuides.length === 0) return;
+    
+    let filteredResults = [...originalGuides];
+    
+    // Apply language filters
+    if (activeFilters.Guide && activeFilters.Guide.length > 0) {
+      filteredResults = filteredResults.filter(guide => 
+        activeFilters.Guide.includes(guide.language)
+      );
+    }
+    
+    // Apply sorting
+    if (sortOption === "price-low-high") {
+      filteredResults.sort((a, b) => a.cost - b.cost);
+    } else if (sortOption === "price-high-low") {
+      filteredResults.sort((a, b) => b.cost - a.cost);
+    }
+    
+    setGuides(filteredResults);
+  }, [activeFilters, sortOption, originalGuides]);
+
+  // Modified: Fetch guides and store in both states
+  useEffect(() => {
+    async function fetchGuides() {
+      try {
+        const { data } = await axios.get("/api/guides");
+
+        if (data && data.length > 0) {
+          const guidesWithImages = data.map((guide, idx) => ({
+            ...guide,
+            image: images[idx % images.length],
+          }));
+          setGuides(guidesWithImages);
+          setOriginalGuides(guidesWithImages); // Store original data
+        }
+      } catch (err) {
+        // optional: handle error
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchGuides();
+  }, []);  
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -282,22 +359,36 @@ export default function GuideFilter() {
                 Price Range
                 <ChevronDownIcon className="w-5 h-5 text-gray-400" />
               </Menu.Button>
-              <Menu.Items className="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-xl ring-1 ring-black/5 focus:outline-none">
-                {sortOptions.map((option) => (
-                  <Menu.Item key={option.name}>
-                    {({ active }) => (
-                      <a
-                        href={option.href}
-                        className={classNames(
-                          active ? "bg-gray-100 text-gray-900" : "text-gray-500",
-                          "block px-4 py-2 text-sm"
-                        )}
-                      >
-                        {option.name}
-                      </a>
-                    )}
-                  </Menu.Item>
-                ))}
+              {/* FIXED: Added z-index and improved positioning */}
+              <Menu.Items className="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-xl ring-1 ring-black/5 focus:outline-none z-50">
+                <Menu.Item>
+                  {({ active }) => (
+                    <button
+                      className={classNames(
+                        "block px-4 py-2 text-sm w-full text-left",
+                        active ? "bg-gray-100 text-gray-900" : "text-gray-500",
+                        sortOption === "price-low-high" ? "font-semibold" : ""
+                      )}
+                      onClick={() => handleSortChange("price-low-high")}
+                    >
+                      Price: Low to High
+                    </button>
+                  )}
+                </Menu.Item>
+                <Menu.Item>
+                  {({ active }) => (
+                    <button
+                      className={classNames(
+                        "block px-4 py-2 text-sm w-full text-left",
+                        active ? "bg-gray-100 text-gray-900" : "text-gray-500",
+                        sortOption === "price-high-low" ? "font-semibold" : ""
+                      )}
+                      onClick={() => handleSortChange("price-high-low")}
+                    >
+                      Price: High to Low
+                    </button>
+                  )}
+                </Menu.Item>
               </Menu.Items>
             </Menu>
 
@@ -320,7 +411,7 @@ export default function GuideFilter() {
             {/* Sidebar */}
             <form className="hidden lg:block">
               {filters.map((section) => (
-                <Disclosure key={section.id} as="div" className="border-b py-6">
+                <Disclosure key={section.id} as="div" className="border-b py-6" defaultOpen={true}>
                   {({ open }) => (
                     <>
                       <Disclosure.Button className="flex w-full justify-between text-gray-700 font-medium hover:text-gray-900">
@@ -333,7 +424,8 @@ export default function GuideFilter() {
                             <input
                               id={`filter-${section.id}-${idx}`}
                               type="checkbox"
-                              defaultChecked={option.checked}
+                              checked={activeFilters[section.id]?.includes(option.value) || false}
+                              onChange={(e) => handleFilterChange(section.id, option.value, e.target.checked)}
                               className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                             />
                             <label htmlFor={`filter-${section.id}-${idx}`} className="text-gray-600 text-sm">

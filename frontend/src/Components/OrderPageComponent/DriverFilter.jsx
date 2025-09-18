@@ -59,6 +59,26 @@ const images = [
   image14,
 ];
 
+const filters = [
+  {
+    id: "Language",
+    name: "Driver Language",
+    options: [
+      { value: "Hindi", label: "Hindi", checked: false },
+      { value: "English", label: "English", checked: false },
+      { value: "Jharkhandi", label: "Jharkhandi (Local Language)", checked: false },
+    ],
+  },
+];
+
+const sortOptions = [
+  { name: "Price: Low to High", value: "price-low-high" },
+  { name: "Price: High to Low", value: "price-high-low" },
+];
+
+function classNames(...classes) {
+  return classes.filter(Boolean).join(" ");
+}
 
 export default function DriverFilter() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -66,6 +86,13 @@ export default function DriverFilter() {
   const [loading, setLoading] = useState(true);
 
   const [selectedDriver, setSelectedDriver] = useState(null);
+
+  // NEW: Add filter state
+  const [activeFilters, setActiveFilters] = useState({});
+  // NEW: Add sort state
+  const [sortOption, setSortOption] = useState("default");
+  // NEW: Add original drivers state to keep unfiltered data
+  const [originalDrivers, setOriginalDrivers] = useState([]);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -158,6 +185,74 @@ export default function DriverFilter() {
     }
   }, [location, navigate]);
 
+  // NEW: Handle filter change
+  const handleFilterChange = (sectionId, optionValue, isChecked) => {
+    setActiveFilters(prev => {
+      const newFilters = { ...prev };
+      if (!newFilters[sectionId]) {
+        newFilters[sectionId] = [];
+      }
+      
+      if (isChecked) {
+        newFilters[sectionId] = [...newFilters[sectionId], optionValue];
+      } else {
+        newFilters[sectionId] = newFilters[sectionId].filter(val => val !== optionValue);
+      }
+      
+      return newFilters;
+    });
+  };
+
+  // NEW: Handle sort change
+  const handleSortChange = (option) => {
+    setSortOption(option);
+  };
+
+  // NEW: Apply filters and sorting
+  useEffect(() => {
+    if (originalDrivers.length === 0) return;
+    
+    let filteredResults = [...originalDrivers];
+    
+    // Apply language filters
+    if (activeFilters.Language && activeFilters.Language.length > 0) {
+      filteredResults = filteredResults.filter(driver => 
+        activeFilters.Language.includes(driver.language)
+      );
+    }
+    
+    // Apply sorting
+    if (sortOption === "price-low-high") {
+      filteredResults.sort((a, b) => a.cost - b.cost);
+    } else if (sortOption === "price-high-low") {
+      filteredResults.sort((a, b) => b.cost - a.cost);
+    }
+    
+    setDrivers(filteredResults);
+  }, [activeFilters, sortOption, originalDrivers]);
+
+  // Modified: Fetch drivers and store in both states
+  useEffect(() => {
+    async function fetchDrivers() {
+      try {
+        const { data } = await axios.get("/api/drivers");
+        // Add images by cycling through list
+        const driversWithImages = data.map((driver, idx) => ({
+          ...driver,
+          image: images[idx % images.length],
+        }));
+        setDrivers(driversWithImages);
+        setOriginalDrivers(driversWithImages); // Store original data
+      } catch (error) {
+        setDrivers([]);
+        console.error("Error fetching drivers:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchDrivers();
+  }, []);
+
   return (
     <div className="bg-gray-50 min-h-screen">
       {/* Mobile Filter */}
@@ -203,67 +298,131 @@ export default function DriverFilter() {
                 </div>
 
                 {/* Put filter UI here similarly as your GuideFilter if needed */}
-
+                <section className="pt-6 pb-20">
+                  <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                    {/* Sidebar */}
+                    <form className="hidden lg:block bg-white rounded-2xl p-6 shadow-md">
+                      <h3 className="font-semibold text-lg text-gray-900 mb-4">Filters</h3>
+                      {filters.map((section) => (
+                        <Disclosure key={section.id} as="div" className="border-b py-6" defaultOpen={true}>
+                          {({ open }) => (
+                            <>
+                              <DisclosureButton className="flex justify-between w-full text-left text-gray-700 font-medium">
+                                {section.name}
+                                {open ? <MinusIcon className="h-5 w-5" /> : <PlusIcon className="h-5 w-5" />}
+                              </DisclosureButton>
+                              <DisclosurePanel className="mt-4 space-y-3">
+                                {section.options.map((option) => (
+                                  <label key={option.value} className="flex items-center gap-2">
+                                    <input
+                                      type="checkbox"
+                                      className="h-4 w-4 rounded border-gray-300 text-indigo-600"
+                                      checked={activeFilters[section.id]?.includes(option.value) || false}
+                                      onChange={(e) => handleFilterChange(section.id, option.value, e.target.checked)}
+                                    />
+                                    <span className="text-gray-600">{option.label}</span>
+                                  </label>
+                                ))}
+                              </DisclosurePanel>
+                            </>
+                          )}
+                        </Disclosure>
+                      ))}
+                    </form>
+                  </div>
+                </section>
               </DialogPanel>
             </Transition.Child>
           </div>
         </Dialog>
       </Transition>
 
-      {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex items-baseline justify-between border-b border-gray-200 pt-24 pb-6">
+        <div className="flex items-baseline justify-between border-b border-gray-200 pt-20 pb-6">
           <h1 className="text-4xl font-bold tracking-tight text-gray-900">Best Drivers</h1>
 
-          {/* Add sorting, filter, grid buttons here if needed */}
-        </div>
-
-        {loading ? (
-          <p className="text-center text-gray-400">Loading drivers...</p>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {drivers.map((driver, index) => (
-              <div
-                key={driver._id}
-                className="flex flex-col gap-4 bg-white rounded-2xl py-6 px-4 shadow-md hover:shadow-xl transition-transform transform hover:-translate-y-1"
-                onClick={() => setSelectedDriver(driver)}
-              >
-                <div className="flex items-center justify-center h-52 rounded-xl overflow-hidden shadow-md bg-white">
-                  <img
-                    src={driver.image}
-                    alt={driver.name}
-                    className="h-full w-auto object-contain rounded-xl"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <h2 className="text-xl font-semibold text-gray-900">{driver.name}</h2>
-                  <p className="text-gray-600 text-sm">{driver.guide_description}</p>
-                  <p className="font-semibold text-gray-700">Language: {driver.language || "-"}</p>
-                  <p className="font-semibold text-gray-700">Days: {driver.days}</p>
-                  <p className="font-semibold text-gray-700 text-green-600">Cost: ₹{driver.cost}</p>
-
-                  {/* Rating & reviews count can be shown here */}
-                  <div className="flex items-center gap-2">
-                    <StarComponent />
-                    <span className="text-gray-500 text-sm">
-                      ({driver.reviews?.length ?? 0} reviews)
-                    </span>
-                  </div>
-
-                  <button
-                    className="mt-auto rounded-full bg-indigo-500 text-white py-2 px-6 font-semibold hover:bg-indigo-600 transition"
-                    onClick={(e) => {
-                      handleBookDriver(driver); // Updated handler
-                    }}
-                  >
-                    {isLoggedIn() ? "Book Driver" : "Login to Book"}
-                  </button>
-                </div>
-              </div>
-            ))}
+          <div className="flex items-center gap-4">
+            <Menu as="div" className="relative inline-block text-left">
+              <Menu.Button className="inline-flex items-center gap-1 text-gray-700 hover:text-gray-900 font-medium">
+                Price Range
+                <ChevronDownIcon className="w-5 h-5 text-gray-400" />
+              </Menu.Button>
+              <Menu.Items className="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-xl ring-1 ring-black/5 focus:outline-none z-50">
+                {sortOptions.map((option) => (
+                  <Menu.Item key={option.name}>
+                    {({ active }) => (
+                      <button
+                        className={classNames(
+                          "block px-4 py-2 text-sm w-full text-left",
+                          active ? "bg-gray-100 text-gray-900" : "text-gray-500",
+                          sortOption === option.value ? "font-semibold" : ""
+                        )}
+                        onClick={() => handleSortChange(option.value)}
+                      >
+                        {option.name}
+                      </button>
+                    )}
+                  </Menu.Item>
+                ))}
+              </Menu.Items>
+            </Menu>
+              
+            <button
+              onClick={() => setMobileFiltersOpen(true)}
+              className="p-2 text-gray-400 hover:text-gray-500 rounded-md lg:hidden"
+            >
+              <FunnelIcon className="w-5 h-5" />
+            </button>
           </div>
-        )}
+        </div>
+            
+            {/* Drivers Grid */}
+            {loading ? (
+              <p className="text-center text-gray-400 col-span-full">Loading drivers...</p>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {drivers.map((driver) => (
+                  <div
+                    key={driver._id}
+                    className="flex flex-col gap-4 bg-white rounded-2xl py-6 px-4 shadow-md hover:shadow-xl transition-transform transform hover:-translate-y-1 cursor-pointer"
+                    onClick={() => setSelectedDriver(driver)}
+                  >
+                    <div className="flex items-center justify-center h-52 rounded-xl overflow-hidden shadow-md bg-white">
+                      <img
+                        src={driver.image}
+                        alt={driver.name}
+                        className="h-full w-auto object-contain rounded-xl"
+                      />
+                    </div>
+                
+                    <div className="flex flex-col gap-2 flex-grow">
+                      <h2 className="text-xl font-semibold text-gray-900">{driver.name}</h2>
+                      <p className="text-gray-600 text-sm">{driver.guide_description}</p>
+                      <p className="font-semibold text-gray-700">Language: {driver.language || "-"}</p>
+                      <p className="font-semibold text-gray-700">Days: {driver.days}</p>
+                      <p className="font-semibold text-gray-700 text-green-600">Cost: ₹{driver.cost}</p>
+                
+                      <div className="flex items-center gap-2">
+                        <StarComponent />
+                        <span className="text-gray-500 text-sm">
+                          ({driver.reviews?.length ?? 0} reviews)
+                        </span>
+                      </div>
+                
+                      <button
+                        className="mt-auto rounded-full bg-indigo-500 text-white py-2 px-6 font-semibold hover:bg-indigo-600 transition"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleBookDriver(driver);
+                        }}
+                      >
+                        {isLoggedIn() ? "Book Driver" : "Login to Book"}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
       </main>
 
       <Dialog
