@@ -1,4 +1,5 @@
 import React, { useState, useEffect, Fragment } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
 import image1 from "../../assets/image1.png";
@@ -66,6 +67,14 @@ export default function DriverFilter() {
 
   const [selectedDriver, setSelectedDriver] = useState(null);
 
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Check if user is logged in
+  const isLoggedIn = () => {
+    return localStorage.getItem("userRole") !== null;
+  };
+
   useEffect(() => {
     async function fetchDrivers() {
       try {
@@ -85,6 +94,55 @@ export default function DriverFilter() {
     }
     fetchDrivers();
   }, []);
+
+  // Handler for Book Driver button - check auth first
+  const handleBookDriver = (driver) => {
+    if (!isLoggedIn()) {
+      // Store current location and intended driver for redirect after login
+      const currentPath = location.pathname;
+      const returnTo = `${currentPath}?driverId=${driver.driver_id || driver._id}`;
+      
+      // Store in localStorage for persistent redirect
+      localStorage.setItem("redirectAfterLogin", returnTo);
+      localStorage.setItem("intendedDriver", JSON.stringify(driver));
+      
+      // Redirect to login
+      navigate("/loginpage");
+      return;
+    }
+
+    // User is logged in, proceed with booking
+    handleAddToCart(driver);
+  };
+
+  // Original add to cart handler (for logged-in users)
+  const handleAddToCart = (driver) => {
+    console.log("Book driver:", driver);
+    alert(`"${driver.name}" booked successfully!`);
+    // Here you would typically make an API call to add to cart/bookings
+  };
+
+  // Check for redirect after login on component mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const driverId = urlParams.get('driverId');
+    
+    if (driverId && isLoggedIn()) {
+      // User was redirected here after login, find the driver and show it
+      const intendedDriver = localStorage.getItem("intendedDriver");
+      if (intendedDriver) {
+        const driver = JSON.parse(intendedDriver);
+        setSelectedDriver(driver);
+        
+        // Clean up
+        localStorage.removeItem("redirectAfterLogin");
+        localStorage.removeItem("intendedDriver");
+        
+        // Clean URL
+        navigate(location.pathname, { replace: true });
+      }
+    }
+  }, [location, navigate]);
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -181,9 +239,11 @@ export default function DriverFilter() {
 
                   <button
                     className="mt-auto rounded-full bg-indigo-500 text-white py-2 px-6 font-semibold hover:bg-indigo-600 transition"
-                    onClick={() => alert(`Booking driver: ${driver.name}`)}
+                    onClick={(e) => {
+                      handleBookDriver(driver); // Updated handler
+                    }}
                   >
-                    Book Driver
+                    {isLoggedIn() ? "Book Driver" : "Login to Book"}
                   </button>
                 </div>
               </div>
@@ -228,11 +288,13 @@ export default function DriverFilter() {
                 <button
                   className="w-full px-6 py-3 rounded-full bg-gradient-to-r from-amber-400 to-pink-500 text-white font-semibold shadow-md hover:shadow-xl hover:scale-105 transition transform duration-300"
                   onClick={() => {
-                    handleAddToCart(selectedDriver);
-                    setSelectedDriver(null);
+                    handleBookDriver(selectedDriver);
+                    if (isLoggedIn()) {
+                      setSelectedDriver(null);
+                    }
                   }}
                 >
-                  Add to Cart
+                  {isLoggedIn() ? "Book This Driver" : "Login to Book"}
                 </button>
               </div>
             </>

@@ -18,11 +18,9 @@ const images = [
   image8, image9, image10, image11, image12, image13, image14,
 ];
 
-const items1 = [1, 1, 1, 1, 1];
-const items2 = [1, 1, 1];
-
 //Newly added
 import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
 // import { useState } from "react";
@@ -80,11 +78,19 @@ export default function OrderFilter() {
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
 
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Check if user is logged in
+  const isLoggedIn = () => !!localStorage.getItem("userRole");
+
   useEffect(() => {
     async function fetchOrders() {
       setLoadingOrders(true);
       try {
-        const { data } = await axios.get("/api/orders");
+        const { data } = await axios.get("http://localhost:5000/api/orders", {
+          withCredentials: true,
+        });
         setOrders(data);
       } catch (err) {
         console.error("Failed to fetch orders:", err);
@@ -93,6 +99,36 @@ export default function OrderFilter() {
     }
     fetchOrders();
   }, []);
+
+  // Handler for "Visit Location" button
+  const handleVisitLocation = (order) => {
+    if (!isLoggedIn()) {
+      // store redirect info
+      const returnTo = `${location.pathname}?orderId=${order.order_id}`;
+      localStorage.setItem("redirectAfterLogin", returnTo);
+      localStorage.setItem("intendedOrder", JSON.stringify(order));
+      return navigate("/loginpage");
+    }
+    // proceed when logged in
+    alert(`Visiting ${order.location}!`);
+  };
+
+  // After login redirect
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const orderId = params.get("orderId");
+    if (orderId && isLoggedIn()) {
+      const intended = localStorage.getItem("intendedOrder");
+      if (intended) {
+        const order = JSON.parse(intended);
+        alert(`Redirected to order at ${order.location}`); 
+        // optionally open modal or navigate to detail
+        localStorage.removeItem("redirectAfterLogin");
+        localStorage.removeItem("intendedOrder");
+        navigate(location.pathname, { replace: true });
+      }
+    }
+  }, [location, navigate]);
 
   return (
     <div className="bg-gradient-to-b from-gray-50 to-white min-h-screen">
@@ -212,41 +248,6 @@ export default function OrderFilter() {
             </div>
           </div>
 
-          {/* New dynamically fetched orders rendered here */}
-          <section className="pt-8 pb-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl font-semibold mb-6">Recent Orders</h2>
-            {loadingOrders ? (
-              <p>Loading orders...</p>
-            ) : orders.length === 0 ? (
-              <p>No orders available.</p>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {orders.map((order, index) => (
-                  <div key={order._id} className="bg-white rounded-2xl shadow p-4">
-                    <img
-                      src={images[index % images.length]}
-                      alt="Order"
-                      className="h-40 w-full object-cover rounded-lg mb-4"
-                    />
-                    <h3 className="text-lg font-bold">{order.location}</h3>
-                    <p className="text-gray-600 mb-2">{order.description || "-"}</p>
-                    <p className="text-sm text-gray-500">
-                      User: {order.user?.fullname || "Unknown"}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      Guide: {order.guide?.name || "Not assigned"}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      Resort: {order.resort?.name || "Not assigned"}
-                    </p>
-                    <p className="text-sm text-gray-500">Order ID: {order.order_id}</p>
-                    {/* You can add buttons for edit/delete here later */}
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-
           {/* Content Section */}
           <section className="pt-8 pb-24">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
@@ -284,39 +285,44 @@ export default function OrderFilter() {
                   </Disclosure>
                 ))}
               </aside>
-
-              {/* Product Grid */}
+              
+              {/* Orders Grid */}
               <div className="lg:col-span-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-                  {items1.map((_, i) =>
-                    items2.map((_, j) => (
+                  {loadingOrders ? (
+                    <p>Loading orders...</p>
+                  ) : orders.length === 0 ? (
+                    <p>No orders available.</p>
+                  ) : (
+                    orders.map((order, idx) => (
                       <div
-                        key={`${i}-${j}`}
+                        key={order._id}
                         className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-500 border border-gray-100 group"
                       >
                         {/* Image */}
                         <div className="relative h-52 w-full overflow-hidden">
                           <img
-                            src={images[(i + j) % images.length]}
-                            alt="Venue"
+                            src={images[idx % images.length]}
+                            alt={order.location}
                             className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700"
                           />
                           <span className="absolute top-3 left-3 bg-indigo-600 text-white text-xs font-medium px-3 py-1 rounded-full shadow-sm">
-                            Featured
+                            Order
                           </span>
                         </div>
-
                         {/* Card Body */}
                         <div className="p-5 flex flex-col h-[200px]">
                           <h2 className="text-lg font-semibold text-gray-800 mb-2">
-                            RiverDamSarovar
+                            {order.location}
                           </h2>
                           <p className="text-sm text-gray-500 mb-4 line-clamp-3">
-                            Experience the serenity of RiverDamSarovar with
-                            beautiful views, riverside ambience, and nature’s calmness.
+                            {order.description || "No description available."}
                           </p>
-                          <button className="mt-auto w-full py-2.5 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-lg font-semibold shadow hover:from-indigo-600 hover:to-indigo-700 transition-transform duration-300 hover:scale-105">
-                            Visit Location
+                          <button
+                            className="mt-auto w-full py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition"
+                            onClick={() => handleVisitLocation(order)}
+                          >
+                            {isLoggedIn() ? "Visit Location" : "Login to Visit"}
                           </button>
                         </div>
                       </div>

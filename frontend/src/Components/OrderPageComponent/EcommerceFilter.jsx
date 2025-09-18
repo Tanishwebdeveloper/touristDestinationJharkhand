@@ -16,6 +16,7 @@ import image14 from "../../assets/image14.png";
 import StarComponent from "./StarComponent";
 
 import React, { useState, useEffect, Fragment } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 // import { useState, Fragment } from "react";
 
@@ -85,6 +86,12 @@ export default function EcommerceFilter() {
   //For dialog model
   const [selectedProduct, setSelectedProduct] = useState(null);
 
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // auth check helper
+  const isLoggedIn = () => !!localStorage.getItem("userRole");
+
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
@@ -106,11 +113,39 @@ export default function EcommerceFilter() {
     fetchProducts();
   }, []);
 
+  // handle add-to-cart with redirect when not logged in
+  const handleAddToCartClick = (prod) => {
+    if (!isLoggedIn()) {
+      const returnTo = `${location.pathname}?productId=${prod._id}`;
+      localStorage.setItem("redirectAfterLogin", returnTo);
+      localStorage.setItem("intendedProduct", JSON.stringify(prod));
+      return navigate("/loginpage");
+    }
+    // actual add-to-cart logic
+    handleAddToCart(prod);
+  };
+
   const handleAddToCart = (prod) => {
     // Example: console log or update cart state / API call
     console.log("Add to cart:", prod);
     alert(`"${prod.product_name}" added to cart!`);
   };
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const productId = params.get("productId");
+    if (productId && isLoggedIn()) {
+      const intended = localStorage.getItem("intendedProduct");
+      if (intended) {
+        const prod = JSON.parse(intended);
+        // auto-open product modal or add to cart
+        setSelectedProduct(prod);
+        localStorage.removeItem("redirectAfterLogin");
+        localStorage.removeItem("intendedProduct");
+        navigate(location.pathname, { replace: true });
+      }
+    }
+  }, [location, navigate]);
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -310,11 +345,10 @@ export default function EcommerceFilter() {
                     </p>
                     <button className="self-start px-6 py-2 text-sm font-semibold bg-indigo-500 text-white rounded-full hover:bg-indigo-600 transition"
                       onClick={(e) => {
-                          e.stopPropagation(); // Prevent card click when button clicked
-                          handleAddToCart(prod);
-                        }}
+                        handleAddToCartClick(prod);
+                      }}
                     >
-                      Add to Cart
+                      {isLoggedIn() ? "Add to Cart" : "Login to Add"}
                     </button>
                   </div>
                 </div>                
@@ -358,11 +392,13 @@ export default function EcommerceFilter() {
                 <button
                   className="w-full px-6 py-3 rounded-full bg-gradient-to-r from-amber-400 to-pink-500 text-white font-semibold shadow-md hover:shadow-xl hover:scale-105 transition transform duration-300"
                   onClick={() => {
-                    handleAddToCart(selectedProduct);
-                    setSelectedProduct(null);
+                    handleAddToCartClick(selectedProduct);
+                    if (isLoggedIn()) {
+                      setSelectedProduct(null);
+                    }
                   }}
                 >
-                  Add to Cart
+                  {isLoggedIn() ? "Add to Cart" : "Login to Add"}
                 </button>
               </div>
             </>

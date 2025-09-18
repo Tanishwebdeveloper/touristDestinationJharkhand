@@ -46,6 +46,15 @@ export default function LoginPage() {
         // Dispatch custom event to notify Navbar
         window.dispatchEvent(new Event('authStateChanged'));
 
+        // Check for redirect after login
+        const redirectPath = localStorage.getItem("redirectAfterLogin");
+
+        if (redirectPath) {
+          // User was trying to access something before login
+          navigate(redirectPath);
+          return;
+        }
+
         // Role-based redirect
         switch (userRole.toLowerCase()) {
           case "tourist":
