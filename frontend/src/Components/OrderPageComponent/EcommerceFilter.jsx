@@ -57,8 +57,8 @@ const images = [
 const items3 = new Array(10).fill(1);
 
 const sortOptions = [
-  { name: "Price: Low to High", href: "#", current: false },
-  { name: "Price: High to Low", href: "#", current: false },
+  { name: "Price: Low to High", value: "low", current: false },
+  { name: "Price: High to Low", value: "high", current: false },
 ];
 
 const filters = [
@@ -89,8 +89,19 @@ export default function EcommerceFilter() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [sortOrder, setSortOrder] = useState("");
+
   // auth check helper
   const isLoggedIn = () => !!localStorage.getItem("userRole");
+
+  const sortedProducts = [...products].sort((a, b) => {
+    if (sortOrder === "low") {
+      return a.product_discounted_price - b.product_discounted_price;
+    } else if (sortOrder === "high") {
+      return b.product_discounted_price - a.product_discounted_price;
+    }
+    return 0; // no sorting by default
+  });
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -257,22 +268,22 @@ export default function EcommerceFilter() {
           <div className="flex items-center gap-4">
             <Menu as="div" className="relative inline-block text-left">
               <Menu.Button className="inline-flex items-center gap-1 text-gray-700 hover:text-gray-900 font-medium">
-                Price Range
+                Sort by Price
                 <ChevronDownIcon className="w-5 h-5 text-gray-400" />
               </Menu.Button>
-              <Menu.Items className="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-xl ring-1 ring-black/5 focus:outline-none">
+              <Menu.Items className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-xl ring-1 ring-black/5 focus:outline-none">
                 {sortOptions.map((option) => (
-                  <Menu.Item key={option.name}>
+                  <Menu.Item key={option.value}>
                     {({ active }) => (
-                      <a
-                        href={option.href}
+                      <button
+                        onClick={() => setSortOrder(option.value)}
                         className={classNames(
-                          active ? "bg-gray-100 text-gray-900" : "text-gray-500",
-                          "block px-4 py-2 text-sm"
+                          active ? "bg-gray-100 text-gray-900" : "text-gray-700",
+                          "block w-full text-left px-4 py-2 text-sm"
                         )}
                       >
                         {option.name}
-                      </a>
+                      </button>
                     )}
                   </Menu.Item>
                 ))}
@@ -294,18 +305,18 @@ export default function EcommerceFilter() {
 
         {/* Products Section */}
         <section className="pt-6 pb-24">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Sidebar */}
-            <form className="hidden lg:block">
+            {/* <aside className="hidden lg:block lg:col-span-1 bg-white p-4 rounded-xl shadow-md h-fit">
               {filters.map((section) => (
-                <Disclosure key={section.id} as="div" className="border-b py-6">
+                <Disclosure key={section.id} as="div" className="border-b py-4">
                   {({ open }) => (
                     <>
                       <Disclosure.Button className="flex w-full justify-between text-gray-700 font-medium hover:text-gray-900">
                         <span>{section.name}</span>
                         {open ? <MinusIcon className="h-5 w-5" /> : <PlusIcon className="h-5 w-5" />}
                       </Disclosure.Button>
-                      <Disclosure.Panel className="pt-4 space-y-3">
+                      <Disclosure.Panel className="pt-3 space-y-2">
                         {section.options.map((option, idx) => (
                           <div key={option.value} className="flex items-center gap-2">
                             <input
@@ -324,48 +335,55 @@ export default function EcommerceFilter() {
                   )}
                 </Disclosure>
               ))}
-            </form>
+            </aside> */}
 
-            <div className="lg:col-span-3 space-y-6">
-              {loading && <div className="text-center text-gray-400">Loading products...</div>}
+            {/* Product Cards */}
+            <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {loading && <div className="text-center text-gray-400 col-span-full">Loading products...</div>}
 
-              {products.map((prod, index) => (
+              {/* {products.map((prod, index) => ( */}
+              { sortedProducts.map((prod, index) => (
                 <div
                   key={prod.product_id || index}
-                  className="flex flex-col lg:flex-row gap-6 p-6 bg-white/80 backdrop-blur-md border border-gray-200 rounded-2xl shadow-lg hover:shadow-2xl transition-transform hover:-translate-y-1"
+                  className="flex flex-col bg-white border border-gray-200 rounded-xl shadow-md hover:shadow-lg transition-transform hover:-translate-y-1"
                   onClick={() => setSelectedProduct(prod)}
                 >
                   {/* Image */}
-                  <div className="flex items-center justify-center w-full lg:w-[260px] h-[260px] bg-white rounded-2xl shadow-md">
+                  <div className="flex items-center justify-center w-full h-48 bg-gray-50 rounded-t-xl">
                     <img
                       src={prod.image}
                       alt={prod.product_name}
-                      className="h-[200px] w-auto object-contain rounded-xl"
+                      className="h-40 w-auto object-contain"
                     />
                   </div>
+              
                   {/* Content */}
-                  <div className="flex flex-col justify-between flex-1">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-2">{prod.product_name}</h2>
-                    <div className="text-green-600 font-bold text-lg mb-2 line-through">₹{prod.product_real_price}</div>
-                    <div className="text-green-600 font-bold text-lg mb-2">₹{prod.product_discounted_price}</div>
+                  <div className="flex flex-col flex-1 p-4">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-1 truncate">{prod.product_name}</h2>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-gray-400 line-through text-sm">₹{prod.product_real_price}</span>
+                      <span className="text-green-600 font-bold text-base">₹{prod.product_discounted_price}</span>
+                    </div>
                     <div className="flex items-center mb-2">
                       <StarComponent />
-                      <span className="ml-2 text-gray-500 text-sm">
-                        ({prod.reviews ? prod.reviews.length : 0} reviews)
+                      <span className="ml-1 text-gray-500 text-xs">
+                        ({prod.reviews ? prod.reviews.length : 0})
                       </span>
                     </div>
-                    <p className="text-gray-600 text-sm mb-4 leading-relaxed">
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
                       {prod.product_description}
                     </p>
-                    <button className="self-start px-6 py-2 text-sm font-semibold bg-indigo-500 text-white rounded-full hover:bg-indigo-600 transition"
+                    <button
+                      className="mt-auto px-4 py-2 text-sm font-semibold bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition"
                       onClick={(e) => {
+                        e.stopPropagation();
                         handleAddToCartClick(prod);
                       }}
                     >
                       {isLoggedIn() ? "Add to Cart" : "Login to Add"}
                     </button>
                   </div>
-                </div>                
+                </div>
               ))}
             </div>
           </div>
