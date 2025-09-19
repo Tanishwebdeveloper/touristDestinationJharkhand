@@ -4,6 +4,7 @@ import image15 from "../assets/image15.png";
 import { Link } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc"; // Google icon
 import axios from "axios";
+import JharkhandTourismChatbot from '../Components/HomePageComponent/JharkhandTourismChatbot';
 
 export default function LoginPage() {
   const [formData, setformData] = useState({
@@ -162,7 +163,7 @@ export default function LoginPage() {
                 type="submit"
                 className="w-full bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 rounded-xl shadow-md transition-all text-sm"
               >
-                Sign in
+                Log in
               </button>
             </form>
 
@@ -187,6 +188,7 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+      <JharkhandTourismChatbot />
     </div>
   );
 }

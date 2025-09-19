@@ -10,13 +10,22 @@ export const getOrCreateCart = async (req, res) => {
   if (!cart) {
     cart = await Cart.create({ cart_id: uuidv4(), user: userId, items: [] });
   }
+  // Add debugging logs
+  console.log("Cart items after populate:", JSON.stringify(cart.items, null, 2));
+  
   res.json(cart);
+  // res.json(cart);
 };
 
 // Add an item to cart or update its quantity
 export const addToCart = async (req, res) => {
   const { itemType, itemId, quantity = 1 } = req.body;
   const userId = req.userid;
+
+  const Guide = mongoose.model("Guide");
+  const doc = await Guide.findById('68ccd3e91ecc239b72f7dbcc');
+
+  console.log(doc);
 
   let cart = await Cart.findOne({ user: userId });
   if (!cart) {
@@ -33,6 +42,7 @@ export const addToCart = async (req, res) => {
   }
   await cart.save();
   await cart.populate("items.item");
+  console.log("Cart items after populate:", JSON.stringify(cart.items, null, 2));
   res.json(cart);
 };
 
@@ -56,6 +66,7 @@ export const removeFromCart = async (req, res) => {
   }
   await cart.save();
   await cart.populate("items.item");
+  console.log("Cart items after populate:", JSON.stringify(cart.items, null, 2));
   res.json(cart);
 };
 

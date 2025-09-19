@@ -13,6 +13,7 @@
   "license": "ISC",
   "description": "Tourist Application For Jharkhand People For uplifiting their society and engage them their livelihood",
   "dependencies": {
+    "@google/genai": "^1.20.0",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.2",
     "cookie-parser": "^1.4.7",
@@ -23,6 +24,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.19.0",
     "mongoose": "^8.18.1",
+    "nodemailer": "^7.0.6",
     "nodemon": "^3.1.10",
     "uuid": "^13.0.0"
   }

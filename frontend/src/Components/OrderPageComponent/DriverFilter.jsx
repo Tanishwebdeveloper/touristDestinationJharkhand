@@ -146,7 +146,7 @@ export default function DriverFilter() {
   const handleAddToCart = async (driver) => {
     try {
       const payload = {
-        itemType: "Driver",
+        itemType: "Driver", 
         itemId: driver._id,
         quantity: 1,
       };

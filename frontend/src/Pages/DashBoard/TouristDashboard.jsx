@@ -90,12 +90,12 @@ export default function TouristDashboard() {
             >
               My Orders
             </button>
-            <button 
+            {/* <button 
               className={`${activeTab === 'partners' ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white' : 'bg-white shadow'} px-4 py-2 rounded-full text-sm`}
               onClick={() => setActiveTab('partners')}
             >
               Service Partners
-            </button>
+            </button> */}
           </div>
 
           {/* Orders Section */}

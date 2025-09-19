@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import image15 from "../assets/image15.png";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import JharkhandTourismChatbot from '../Components/HomePageComponent/JharkhandTourismChatbot';
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -187,6 +188,7 @@ export default function SignupPage() {
           </div>
         </div>
       </div>
+      <JharkhandTourismChatbot />
     </div>
   );
 }

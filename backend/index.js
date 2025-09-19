@@ -22,6 +22,9 @@ import driverRoutes from "./routes/driver.js";
 import ecommerceProductRoutes from "./routes/ecommerceProduct.js";
 import cartRoutes from "./routes/cart.js";
 import userRoutes from "./routes/user.js";
+import userPaymentRoutes from "./routes/userPayment.js";
+import rateBotRouter from './routes/RateBot.js';
+import tourismGuideRouter from './routes/tourismGuide.js';
 
 app.use("/api/resorts", resortRoutes);
 app.use("/api/guides", guideRoutes);
@@ -30,6 +33,9 @@ app.use("/api/drivers", driverRoutes);
 app.use("/api/products", ecommerceProductRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api/payment",userPaymentRoutes);
+app.use('/api/chat', rateBotRouter);
+app.use("/api/jharkhand-tourism-chat", tourismGuideRouter)
 
 app.listen(port, ()=>{
    console.log(`Server is running on the port ${port} `);
